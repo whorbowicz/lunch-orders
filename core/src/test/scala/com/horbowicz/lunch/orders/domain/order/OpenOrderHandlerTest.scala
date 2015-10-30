@@ -22,25 +22,25 @@ class OpenOrderHandlerTest extends BaseSpec
     "returns Id of newly created order" in {
       val expectedId: String = "12345"
       idProvider.get _ expects() returning expectedId
-      val orderId = handler.handle(sampleCommand)
-
-      orderId shouldBe \/-(expectedId)
+      handler.handle(
+        sampleCommand,
+        response => response shouldBe \/-(expectedId))
     }
 
     "returns error if expected delivery time is before ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime.minusHours(1))
-      val orderId = handler.handle(command)
-
-      orderId shouldBe -\/(ImpossibleDeliveryTime)
+      handler.handle(
+        command,
+        response => response shouldBe -\/(ImpossibleDeliveryTime))
     }
 
     "returns error if expected delivery time is same as ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime)
-      val orderId = handler.handle(command)
-
-      orderId shouldBe -\/(ImpossibleDeliveryTime)
+      handler.handle(
+        command,
+        response => response shouldBe -\/(ImpossibleDeliveryTime))
     }
   }
 }

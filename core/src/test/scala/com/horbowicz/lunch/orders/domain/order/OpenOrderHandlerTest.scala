@@ -14,9 +14,9 @@ class OpenOrderHandlerTest extends BaseSpec
   val handler = new OpenOrderHandler(idProvider)
   val sampleCommand = OpenOrder(
     provider = "Food House",
+    personResponsible = "WHO",
     orderingTime = LocalTime.of(10, 30),
-    expectedDeliveryTime = LocalTime.of(12, 30),
-    personResponsible = "WHO")
+    expectedDeliveryTime = LocalTime.of(12, 30))
 
   "OpenOrderHandler" - {
     "returns Id of newly created order" in {

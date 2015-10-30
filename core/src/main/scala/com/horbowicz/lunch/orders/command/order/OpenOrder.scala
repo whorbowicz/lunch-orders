@@ -4,7 +4,6 @@ import java.time._
 
 case class OpenOrder(
   provider: String,
+  personResponsible: String,
   orderingTime: LocalTime,
-  expectedDeliveryTime: LocalTime,
-  personResponsible: String
-)
+  expectedDeliveryTime: LocalTime)

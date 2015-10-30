@@ -8,7 +8,7 @@ import com.horbowicz.lunch.orders.domain.IdProvider
 
 import scalaz._
 
-class OpenOrderHandlerTest extends BaseSpec
+class OpenOrderHandlerSpec extends BaseSpec
 {
   val idProvider = mock[IdProvider[String]]
   val handler = new OpenOrderHandler(idProvider)

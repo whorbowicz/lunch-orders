@@ -4,25 +4,39 @@ import java.time._
 
 import com.horbowicz.lunch.orders.BaseSpec
 import com.horbowicz.lunch.orders.command.order.OpenOrder
+import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
+import com.horbowicz.lunch.orders.event.EventPublisher
+import com.horbowicz.lunch.orders.event.order.OrderOpened
 
 import scalaz._
 
-class OpenOrderHandlerSpec extends BaseSpec
+class OrderServiceSpec extends BaseSpec
 {
   val idProvider = mock[IdProvider]
-  val handler = new OpenOrderHandler(idProvider)
+  val timeProvider = mock[TimeProvider]
+  val eventPublisher = mock[EventPublisher]
+  val service = new OrderService(idProvider, timeProvider, eventPublisher)
   val sampleCommand = OpenOrder(
     provider = "Food House",
     personResponsible = "WHO",
     orderingTime = LocalTime.of(10, 30),
     expectedDeliveryTime = LocalTime.of(12, 30))
 
-  "OpenOrderHandler" - {
-    "returns Id of newly created order" in {
+  "Order service" - {
+    "publishes OrderOpened event and returns Id of newly opened order" in {
       val expectedId: String = "12345"
+      val currentDateTime = LocalDateTime.now()
       idProvider.get _ expects() returning expectedId
-      handler.handle(
+      timeProvider.getCurrentDateTime _ expects() returning currentDateTime
+      eventPublisher.publish _ expects OrderOpened(
+        expectedId,
+        currentDateTime,
+        sampleCommand.provider,
+        sampleCommand.personResponsible,
+        sampleCommand.orderingTime,
+        sampleCommand.expectedDeliveryTime)
+      service.handle(
         sampleCommand,
         response => response shouldBe \/-(expectedId))
     }
@@ -30,7 +44,7 @@ class OpenOrderHandlerSpec extends BaseSpec
     "returns error if expected delivery time is before ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime.minusHours(1))
-      handler.handle(
+      service.handle(
         command,
         response => response shouldBe -\/(ImpossibleDeliveryTime))
     }
@@ -38,7 +52,7 @@ class OpenOrderHandlerSpec extends BaseSpec
     "returns error if expected delivery time is same as ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime)
-      handler.handle(
+      service.handle(
         command,
         response => response shouldBe -\/(ImpossibleDeliveryTime))
     }

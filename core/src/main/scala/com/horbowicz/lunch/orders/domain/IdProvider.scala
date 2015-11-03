@@ -1,6 +1,8 @@
 package com.horbowicz.lunch.orders.domain
 
-trait IdProvider[Id]
+import com.horbowicz.lunch.orders.Global._
+
+trait IdProvider
 {
   def get(): Id
 }

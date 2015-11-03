@@ -10,7 +10,7 @@ import scalaz._
 
 class OpenOrderHandlerSpec extends BaseSpec
 {
-  val idProvider = mock[IdProvider[String]]
+  val idProvider = mock[IdProvider]
   val handler = new OpenOrderHandler(idProvider)
   val sampleCommand = OpenOrder(
     provider = "Food House",

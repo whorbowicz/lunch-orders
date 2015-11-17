@@ -1,12 +1,13 @@
 package com.horbowicz.lunch.orders.domain.order
 
-import com.horbowicz.lunch.orders.Global._
+import com.horbowicz.lunch.orders.Global.Id
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 
+import scalaz.Scalaz._
 import scalaz._
 
 class OrderService(
@@ -37,7 +38,7 @@ class OrderService(
   ): Unit =
     responseCallback(
       if (command.expectedDeliveryTime.isAfter(command.orderingTime))
-        \/-(openOrder(command))
+        openOrder(command).right
       else
-        -\/(ImpossibleDeliveryTime))
+        ImpossibleDeliveryTime.left)
 }

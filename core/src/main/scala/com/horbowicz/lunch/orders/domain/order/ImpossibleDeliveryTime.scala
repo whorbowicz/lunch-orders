@@ -1,3 +1,5 @@
 package com.horbowicz.lunch.orders.domain.order
 
-case object ImpossibleDeliveryTime
+import com.horbowicz.lunch.orders.command.error.CommandError
+
+case object ImpossibleDeliveryTime extends CommandError

@@ -5,6 +5,6 @@ import com.horbowicz.lunch.orders.command.order.item.AddOrderItem
 
 trait Order
 {
-  def handle(command: AddOrderItem, callback: Id => Unit)
+  def addItem(command: AddOrderItem, callback: Id => Unit)
 
 }

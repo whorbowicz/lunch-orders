@@ -1,24 +1,23 @@
 package com.horbowicz.lunch.orders.domain.order
 
 import com.horbowicz.lunch.orders.Global.Id
+import com.horbowicz.lunch.orders.command.CommandHandler
 import com.horbowicz.lunch.orders.command.order.item.AddOrderItem
 
 import scalaz.Scalaz._
-import scalaz._
 
 class AddOrderItemHandler(orderRepository: OrderRepository)
+  extends CommandHandler[AddOrderItem, Id]
 {
-  type Response = OrderNotFound.type \/ Id
-
   def handle(
     command: AddOrderItem,
-    responseCallback: Response => Unit
+    responseCallback: Callback
   ): Unit =
     orderRepository.findById(
       command.orderId,
       findResponse => findResponse.fold(
         notFound => responseCallback(notFound.left),
-        order => order.handle(
+        foundOrder => foundOrder.addItem(
           command,
           response => responseCallback(response.right))))
 }

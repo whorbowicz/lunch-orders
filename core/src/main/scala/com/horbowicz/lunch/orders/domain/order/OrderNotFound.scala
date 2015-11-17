@@ -1,3 +1,5 @@
 package com.horbowicz.lunch.orders.domain.order
 
-case object OrderNotFound
+import com.horbowicz.lunch.orders.command.error.CommandError
+
+case object OrderNotFound extends CommandError

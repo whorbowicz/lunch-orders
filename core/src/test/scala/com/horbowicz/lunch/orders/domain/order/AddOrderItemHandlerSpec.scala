@@ -33,7 +33,7 @@ class AddOrderItemHandlerSpec extends BaseSpec
       val expectedResponse = "12345"
       orderRepository.findById _ expects(orderId, *) onCall (
         (_, callback) => callback(order.right))
-      order.handle _ expects(sampleCommand, *) onCall (
+      order.addItem _ expects(sampleCommand, *) onCall (
         (_, callback) => callback(expectedResponse))
 
       handler.handle(

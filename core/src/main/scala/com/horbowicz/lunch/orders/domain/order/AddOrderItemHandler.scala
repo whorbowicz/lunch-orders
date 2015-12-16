@@ -19,5 +19,5 @@ class AddOrderItemHandler(orderRepository: OrderRepository)
         notFound => responseCallback(notFound.left),
         foundOrder => foundOrder.addItem(
           command,
-          response => responseCallback(response.right))))
+          response => responseCallback(response))))
 }

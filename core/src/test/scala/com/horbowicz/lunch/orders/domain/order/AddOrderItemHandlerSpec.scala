@@ -30,7 +30,7 @@ class AddOrderItemHandlerSpec extends BaseSpec
 
     "passes command to Order with given Id if it was found " +
       "and returns Order's response back" in {
-      val expectedResponse = "12345"
+      val expectedResponse = "12345".right
       orderRepository.findById _ expects(orderId, *) onCall (
         (_, callback) => callback(order.right))
       order.addItem _ expects(sampleCommand, *) onCall (
@@ -38,7 +38,7 @@ class AddOrderItemHandlerSpec extends BaseSpec
 
       handler.handle(
         sampleCommand,
-        response => response shouldBe \/-(expectedResponse))
+        response => response shouldBe expectedResponse)
     }
   }
 }

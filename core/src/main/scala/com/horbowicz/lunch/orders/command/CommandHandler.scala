@@ -9,5 +9,5 @@ trait CommandHandler[Command, R]
   type Response = CommandError \/ R
   type Callback = Response => Unit
 
-  def handle(command: Command, callback: Callback)
+  def handle(command: Command, callback: Callback): Unit
 }

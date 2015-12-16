@@ -25,7 +25,7 @@ class AddOrderItemHandlerSpec extends BaseSpec
 
       handler.handle(
         sampleCommand,
-        response => response shouldBe -\/(OrderNotFound))
+        response => response mustBe -\/(OrderNotFound))
     }
 
     "passes command to Order with given Id if it was found " +
@@ -38,7 +38,7 @@ class AddOrderItemHandlerSpec extends BaseSpec
 
       handler.handle(
         sampleCommand,
-        response => response shouldBe expectedResponse)
+        response => response mustBe expectedResponse)
     }
   }
 }

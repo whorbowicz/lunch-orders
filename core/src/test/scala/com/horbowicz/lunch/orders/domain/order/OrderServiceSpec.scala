@@ -38,7 +38,7 @@ class OrderServiceSpec extends BaseSpec
         sampleCommand.expectedDeliveryTime)
       service.handle(
         sampleCommand,
-        response => response shouldBe \/-(expectedId))
+        response => response mustBe \/-(expectedId))
     }
 
     "returns error if expected delivery time is before ordering time" in {
@@ -46,7 +46,7 @@ class OrderServiceSpec extends BaseSpec
         expectedDeliveryTime = sampleCommand.orderingTime.minusHours(1))
       service.handle(
         command,
-        response => response shouldBe -\/(ImpossibleDeliveryTime))
+        response => response mustBe -\/(ImpossibleDeliveryTime))
     }
 
     "returns error if expected delivery time is same as ordering time" in {
@@ -54,7 +54,7 @@ class OrderServiceSpec extends BaseSpec
         expectedDeliveryTime = sampleCommand.orderingTime)
       service.handle(
         command,
-        response => response shouldBe -\/(ImpossibleDeliveryTime))
+        response => response mustBe -\/(ImpossibleDeliveryTime))
     }
   }
 }

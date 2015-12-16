@@ -45,14 +45,14 @@ class OrderAggregateSpec extends BaseSpec
         sampleCommand.price)
       order.addItem(
         sampleCommand,
-        response => response shouldBe expectedId.right)
+        response => response mustBe expectedId.right)
     }
 
     "returns Invalid order id error " +
       "if command's order id does not match it's own id" in {
       order.addItem(
         sampleCommand.copy(orderId = "456"),
-        response => response shouldBe InvalidOrderId.left)
+        response => response mustBe InvalidOrderId.left)
     }
   }
 }

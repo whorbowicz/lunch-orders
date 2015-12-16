@@ -5,6 +5,7 @@ import com.horbowicz.lunch.orders.command.CommandHandler
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
+import com.horbowicz.lunch.orders.domain.order.error.ImpossibleDeliveryTime
 import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 

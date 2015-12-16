@@ -1,6 +1,7 @@
 package com.horbowicz.lunch.orders.domain.order
 
 import com.horbowicz.lunch.orders.command.order.item.AddOrderItem
+import com.horbowicz.lunch.orders.domain.order.error.OrderNotFound
 import com.horbowicz.lunch.orders.{BaseSpec, domain}
 
 import scalaz.Scalaz._

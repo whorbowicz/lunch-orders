@@ -6,6 +6,7 @@ import com.horbowicz.lunch.orders.BaseSpec
 import com.horbowicz.lunch.orders.command.order.item.AddOrderItem
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
+import com.horbowicz.lunch.orders.domain.order.error.InvalidOrderId
 import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.item.OrderItemAdded
 

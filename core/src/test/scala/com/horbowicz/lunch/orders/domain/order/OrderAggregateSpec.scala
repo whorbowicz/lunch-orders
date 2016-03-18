@@ -3,7 +3,7 @@ package com.horbowicz.lunch.orders.domain.order
 import java.time.LocalDateTime
 
 import com.horbowicz.lunch.orders.BaseSpec
-import com.horbowicz.lunch.orders.command.order.item.AddOrderItem
+import com.horbowicz.lunch.orders.command.order.AddOrderItem
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order.error.InvalidOrderId
@@ -44,12 +44,12 @@ class OrderAggregateSpec extends BaseSpec
         sampleCommand.orderingPerson,
         sampleCommand.description,
         sampleCommand.price)
-      order.handle(sampleCommand) mustBe expectedId.right
+      order.addItem(sampleCommand) mustBe expectedId.right
     }
 
     "returns Invalid order id error " +
       "if command's order id does not match it's own id" in {
-      order.handle(sampleCommand.copy(orderId = "456")) mustBe InvalidOrderId.left
+      order.addItem(sampleCommand.copy(orderId = "456")) mustBe InvalidOrderId.left
     }
   }
 }

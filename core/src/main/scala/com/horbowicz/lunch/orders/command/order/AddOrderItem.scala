@@ -1,4 +1,4 @@
-package com.horbowicz.lunch.orders.command.order.item
+package com.horbowicz.lunch.orders.command.order
 
 import com.horbowicz.lunch.orders.Global.Id
 

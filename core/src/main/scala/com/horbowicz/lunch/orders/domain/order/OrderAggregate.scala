@@ -2,7 +2,7 @@ package com.horbowicz.lunch.orders.domain.order
 
 import com.horbowicz.lunch.orders.Global.Id
 import com.horbowicz.lunch.orders.command.error.CommandError
-import com.horbowicz.lunch.orders.command.order.item.AddOrderItem
+import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.order.error.InvalidOrderId
 import com.horbowicz.lunch.orders.domain.{IdProvider, Order}
@@ -19,7 +19,7 @@ class OrderAggregate(
   eventPublisher: EventPublisher)
   extends Order
 {
-  override def handle(command: AddOrderItem): CommandError \/ Id =
+  override def addItem(command: AddOrderItem): CommandError \/ Id =
     if (id == command.orderId) add(command).right
     else InvalidOrderId.left
 
@@ -35,4 +35,6 @@ class OrderAggregate(
         command.price))
     id
   }
+
+  override def place(command: PlaceOrder): Disjunction[CommandError, Unit] = ???
 }

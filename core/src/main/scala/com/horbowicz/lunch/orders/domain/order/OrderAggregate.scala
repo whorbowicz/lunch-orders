@@ -19,7 +19,7 @@ class OrderAggregate(
   eventPublisher: EventPublisher)
   extends Order
 {
-  override def addItem(command: AddOrderItem): CommandError \/ Id =
+  override def handle(command: AddOrderItem): CommandError \/ Id =
     if (id == command.orderId) add(command).right
     else InvalidOrderId.left
 

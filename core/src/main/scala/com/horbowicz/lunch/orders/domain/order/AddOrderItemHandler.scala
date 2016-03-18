@@ -14,5 +14,5 @@ class AddOrderItemHandler(orderRepository: OrderRepository)
       .findById(command.orderId)
       .fold(
         notFound => notFound.left,
-        foundOrder => foundOrder.addItem(command))
+        foundOrder => foundOrder.handle(command))
 }

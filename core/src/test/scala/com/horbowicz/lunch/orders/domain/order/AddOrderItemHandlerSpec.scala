@@ -30,7 +30,7 @@ class AddOrderItemHandlerSpec extends BaseSpec
       "and returns Order's response back" in {
       val expectedResponse = "12345".right
       orderRepository.findById _ expects orderId returning order.right
-      order.addItem _ expects sampleCommand returning expectedResponse
+      order.handle _ expects sampleCommand returning expectedResponse
 
       handler.handle(sampleCommand) mustBe expectedResponse
     }

@@ -13,19 +13,19 @@ import com.horbowicz.lunch.orders.event.order.OrderOpened
 import scalaz._
 import Scalaz._
 
-class OrderServiceSpec extends BaseSpec
+class OpenOrderHandlerSpec extends BaseSpec
 {
   val idProvider = mock[IdProvider]
   val timeProvider = mock[TimeProvider]
   val eventPublisher = mock[EventPublisher]
-  val service = new OrderService(idProvider, timeProvider, eventPublisher)
+  val service = new OpenOrderHandler(idProvider, timeProvider, eventPublisher)
   val sampleCommand = OpenOrder(
     provider = "Food House",
     personResponsible = "WHO",
     orderingTime = LocalTime.of(10, 30),
     expectedDeliveryTime = LocalTime.of(12, 30))
 
-  "Order service" - {
+  "Open order handler" - {
     "publishes OrderOpened event and returns Id of newly opened order" in {
       val expectedId: String = "12345"
       val currentDateTime = LocalDateTime.now()

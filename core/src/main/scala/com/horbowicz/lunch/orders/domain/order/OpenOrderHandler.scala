@@ -11,7 +11,7 @@ import com.horbowicz.lunch.orders.event.order.OrderOpened
 
 import scalaz.Scalaz._
 
-class OrderService(
+class OpenOrderHandler(
   idProvider: IdProvider,
   timeProvider: TimeProvider,
   eventPublisher: EventPublisher)

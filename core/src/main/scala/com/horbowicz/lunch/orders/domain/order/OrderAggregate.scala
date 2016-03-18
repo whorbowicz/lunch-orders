@@ -19,15 +19,11 @@ class OrderAggregate(
   eventPublisher: EventPublisher)
   extends Order
 {
-  override def addItem(
-    command: AddOrderItem,
-    callback: (CommandError \/ Id) => Unit) =
-  {
-    if (id == command.orderId) callback(addItem(command).right)
-    else callback(InvalidOrderId.left)
-  }
+  override def addItem(command: AddOrderItem): CommandError \/ Id =
+    if (id == command.orderId) add(command).right
+    else InvalidOrderId.left
 
-  private def addItem(command: AddOrderItem): Id = {
+  private def add(command: AddOrderItem): Id = {
     val id = idProvider.get()
     eventPublisher.publish(
       OrderItemAdded(

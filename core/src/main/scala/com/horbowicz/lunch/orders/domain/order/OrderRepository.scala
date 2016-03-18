@@ -10,5 +10,5 @@ trait OrderRepository
 {
   type Response = OrderNotFound.type \/ Order
 
-  def findById(id: Id, callback: Response => Unit): Unit
+  def findById(id: Id): Response
 }

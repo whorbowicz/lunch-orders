@@ -11,6 +11,7 @@ import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 
 import scalaz._
+import Scalaz._
 
 class OrderServiceSpec extends BaseSpec
 {
@@ -37,25 +38,22 @@ class OrderServiceSpec extends BaseSpec
         sampleCommand.personResponsible,
         sampleCommand.orderingTime,
         sampleCommand.expectedDeliveryTime)
-      service.handle(
-        sampleCommand,
-        response => response mustBe \/-(expectedId))
+
+      service.handle(sampleCommand) mustBe expectedId.right
     }
 
     "returns error if expected delivery time is before ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime.minusHours(1))
-      service.handle(
-        command,
-        response => response mustBe -\/(ImpossibleDeliveryTime))
+
+      service.handle(command) mustBe ImpossibleDeliveryTime.left
     }
 
     "returns error if expected delivery time is same as ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime)
-      service.handle(
-        command,
-        response => response mustBe -\/(ImpossibleDeliveryTime))
+
+      service.handle(command) mustBe ImpossibleDeliveryTime.left
     }
   }
 }

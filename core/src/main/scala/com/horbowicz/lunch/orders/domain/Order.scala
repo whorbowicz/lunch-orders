@@ -8,7 +8,5 @@ import scalaz.\/
 
 trait Order
 {
-  def addItem(
-    command: AddOrderItem,
-    callback: (CommandError \/ Id) => Unit): Unit
+  def addItem(command: AddOrderItem): CommandError \/ Id
 }

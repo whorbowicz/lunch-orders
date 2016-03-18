@@ -17,15 +17,11 @@ class OrderService(
   eventPublisher: EventPublisher)
   extends CommandHandler[OpenOrder, Id]
 {
-  def handle(
-    command: OpenOrder,
-    responseCallback: Callback
-  ): Unit =
-    responseCallback(
-      if (command.expectedDeliveryTime.isAfter(command.orderingTime))
-        openOrder(command).right
-      else
-        ImpossibleDeliveryTime.left)
+  override def handle(command: OpenOrder): Response =
+    if (command.expectedDeliveryTime.isAfter(command.orderingTime))
+      openOrder(command).right
+    else
+      ImpossibleDeliveryTime.left
 
   private def openOrder(command: OpenOrder) = {
     val id = idProvider.get()

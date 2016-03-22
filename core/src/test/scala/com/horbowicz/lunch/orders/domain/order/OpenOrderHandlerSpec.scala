@@ -15,11 +15,11 @@ import Scalaz._
 
 class OpenOrderHandlerSpec extends BaseSpec
 {
-  val idProvider = mock[IdProvider]
-  val timeProvider = mock[TimeProvider]
-  val eventPublisher = mock[EventPublisher]
-  val service = new OpenOrderHandler(idProvider, timeProvider, eventPublisher)
-  val sampleCommand = OpenOrder(
+  private val idProvider = mock[IdProvider]
+  private val timeProvider = mock[TimeProvider]
+  private val eventPublisher = mock[EventPublisher]
+  private val handler = new OpenOrderHandler(idProvider, timeProvider, eventPublisher)
+  private val sampleCommand = OpenOrder(
     provider = "Food House",
     personResponsible = "WHO",
     orderingTime = LocalTime.of(10, 30),
@@ -39,21 +39,21 @@ class OpenOrderHandlerSpec extends BaseSpec
         sampleCommand.orderingTime,
         sampleCommand.expectedDeliveryTime)
 
-      service.handle(sampleCommand) mustBe expectedId.right
+      handler.handle(sampleCommand) mustBe expectedId.right
     }
 
     "returns error if expected delivery time is before ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime.minusHours(1))
 
-      service.handle(command) mustBe ImpossibleDeliveryTime.left
+      handler.handle(command) mustBe ImpossibleDeliveryTime.left
     }
 
     "returns error if expected delivery time is same as ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime)
 
-      service.handle(command) mustBe ImpossibleDeliveryTime.left
+      handler.handle(command) mustBe ImpossibleDeliveryTime.left
     }
   }
 }

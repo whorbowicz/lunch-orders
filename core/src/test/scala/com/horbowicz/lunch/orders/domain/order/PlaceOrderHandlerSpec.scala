@@ -9,13 +9,13 @@ import Scalaz._
 
 class PlaceOrderHandlerSpec extends BaseSpec 
 {
-  val orderId = "123"
-  val order = mock[domain.Order]
-  val orderRepository = mock[OrderRepository]
-  val sampleCommand = PlaceOrder (
+  private val orderId = "123"
+  private val order = mock[domain.Order]
+  private val orderRepository = mock[OrderRepository]
+  private val handler = new PlaceOrderHandler(orderRepository)
+  private val sampleCommand = PlaceOrder (
     orderId,
     personResponsible = "WHO")
-  val handler = new PlaceOrderHandler(orderRepository)
 
   "Place order handler" - {
     "returns Order not found error if order with given Id cannot be found" in {

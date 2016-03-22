@@ -9,15 +9,15 @@ import scalaz._
 
 class AddOrderItemHandlerSpec extends BaseSpec
 {
-  val orderId = "123"
-  val order = mock[domain.Order]
-  val orderRepository = mock[OrderRepository]
-  val sampleCommand = AddOrderItem(
+  private val orderId = "123"
+  private val order = mock[domain.Order]
+  private val orderRepository = mock[OrderRepository]
+  private val handler = new AddOrderItemHandler(orderRepository)
+  private val sampleCommand = AddOrderItem(
     orderId,
     orderingPerson = "WHO",
     description = "Cheeseburger with chips and diet Coke",
     price = BigDecimal("15.99"))
-  val handler = new AddOrderItemHandler(orderRepository)
 
   "Add order item handler" - {
     "returns Order not found error if order with given Id cannot be found" in {

@@ -1,4 +1,4 @@
-package com.horbowicz.lunch.orders.event.order.item
+package com.horbowicz.lunch.orders.event.order
 
 import java.time.LocalDateTime
 

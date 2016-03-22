@@ -3,33 +3,34 @@ package com.horbowicz.lunch.orders.domain.order
 import java.time.LocalDateTime
 
 import com.horbowicz.lunch.orders.BaseSpec
-import com.horbowicz.lunch.orders.command.order.AddOrderItem
+import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
-import com.horbowicz.lunch.orders.domain.order.error.InvalidOrderId
+import com.horbowicz.lunch.orders.domain.order.error.{InvalidOrderId, UnfilledOrder}
 import com.horbowicz.lunch.orders.event.EventPublisher
-import com.horbowicz.lunch.orders.event.order.item.OrderItemAdded
+import com.horbowicz.lunch.orders.event.order.{OrderItemAdded, OrderPlaced}
 
 import scalaz.Scalaz._
 
 class OrderAggregateSpec extends BaseSpec
 {
-  val orderId = "123"
-  val idProvider = mock[IdProvider]
-  val timeProvider = mock[TimeProvider]
-  val eventPublisher = mock[EventPublisher]
-  val order = new OrderAggregate(
+  private val orderId = "123"
+  private val idProvider = mock[IdProvider]
+  private val timeProvider = mock[TimeProvider]
+  private val eventPublisher = mock[EventPublisher]
+  private val order = new OrderAggregate(
     orderId,
     idProvider,
     timeProvider,
     eventPublisher)
-
-  val orderRepository = mock[OrderRepository]
-  val sampleCommand = AddOrderItem(
+  private val addItemCommand = AddOrderItem(
     orderId,
     orderingPerson = "WHO",
     description = "Cheeseburger with chips and diet Coke",
     price = BigDecimal("15.99"))
+  private val placeOrderCommand = PlaceOrder(
+    orderId,
+    personResponsible = "WHO")
 
   "Order" - {
     "returns Id of newly added item and publishes OrderItemAdded event" in {
@@ -40,16 +41,44 @@ class OrderAggregateSpec extends BaseSpec
       eventPublisher.publish _ expects OrderItemAdded(
         expectedId,
         currentDateTime,
-        sampleCommand.orderId,
-        sampleCommand.orderingPerson,
-        sampleCommand.description,
-        sampleCommand.price)
-      order.addItem(sampleCommand) mustBe expectedId.right
+        addItemCommand.orderId,
+        addItemCommand.orderingPerson,
+        addItemCommand.description,
+        addItemCommand.price)
+      order.addItem(addItemCommand) mustBe expectedId.right
     }
 
     "returns Invalid order id error " +
-      "if command's order id does not match it's own id" in {
-      order.addItem(sampleCommand.copy(orderId = "456")) mustBe InvalidOrderId.left
+      "if add item command's order id does not match it's own id" in {
+      order.addItem(addItemCommand.copy(orderId = "456")) mustBe InvalidOrderId.left
+    }
+
+    "returns Invalid order id error " +
+      "if place order command's order id does not match it's own id" in {
+      order.place(placeOrderCommand.copy(orderId = "456")) mustBe InvalidOrderId.left
+    }
+
+    "returns Unfilled order error " +
+      "if no items were added to order before attempting to place it" in {
+      order.place(placeOrderCommand) mustBe UnfilledOrder.left
+    }
+
+    "returns unit and publishes OrderPlaced event when placed successfully" in {
+      order.applyEvent(
+        OrderItemAdded(
+          "12345",
+          LocalDateTime.now(),
+          orderId,
+          addItemCommand.orderingPerson,
+          addItemCommand.description,
+          addItemCommand.price))
+      val currentDateTime = LocalDateTime.now()
+      timeProvider.getCurrentDateTime _ expects() returning currentDateTime
+      eventPublisher.publish _ expects OrderPlaced(
+        orderId,
+        currentDateTime,
+        placeOrderCommand.personResponsible)
+      order.place(placeOrderCommand) mustBe ().right
     }
   }
 }

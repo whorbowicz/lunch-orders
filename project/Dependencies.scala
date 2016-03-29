@@ -6,6 +6,7 @@ object Dependencies {
   val scalamock = "org.scalamock" %% "scalamock-scalatest-support" % "3.2"
   val scalatest = "org.scalatest" %% "scalatest" % "2.2.4"
   val scalaz = "org.scalaz" %% "scalaz-core" % "7.1.4"
+  val akkaActor = "com.typesafe.akka" %% "akka-actor" % "2.4.2"
 
 
   val default = (scalaVersion: String) => Seq(
@@ -13,5 +14,9 @@ object Dependencies {
     scalatest % Test,
     scalamock % Test,
     scalaReflect(scalaVersion) % Test
+  )
+
+  val akka = Seq(
+    akkaActor
   )
 }

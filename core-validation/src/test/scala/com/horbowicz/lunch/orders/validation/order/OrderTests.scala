@@ -2,26 +2,38 @@ package com.horbowicz.lunch.orders.validation.order
 
 import java.time.LocalTime
 
-import com.horbowicz.lunch.orders.LunchOrderSystem
-import com.horbowicz.lunch.orders.AkkaLunchOrderSystem
+import akka.actor.ActorSystem
+import akka.persistence.inmemory.query.journal.scaladsl.InMemoryReadJournal
+import akka.persistence.query.PersistenceQuery
+import com.horbowicz.lunch.orders.{AkkaLunchOrderSystem, LunchOrderSystem}
 import com.horbowicz.lunch.orders.command.order.OpenOrder
+import com.horbowicz.lunch.orders.query.order.GetActiveOrders
+import com.horbowicz.lunch.orders.read.order.OrdersView
 import com.horbowicz.lunch.orders.validation.ValidationTest
+import org.scalatest.BeforeAndAfter
 
-import scalaz._
-import Scalaz._
+import scala.collection.immutable.Seq
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scalaz._
 
-class OrderTests extends ValidationTest {
-  val system: LunchOrderSystem = new AkkaLunchOrderSystem
+class OrderTests extends ValidationTest with BeforeAndAfter {
+  private var system: LunchOrderSystem = _
+
+  before {
+    val actorSystem = ActorSystem.apply("lunch-orders-core-validation-tests")
+    val readJournal = PersistenceQuery(actorSystem)
+      .readJournalFor[InMemoryReadJournal](InMemoryReadJournal.Identifier)
+    system = new AkkaLunchOrderSystem(actorSystem, readJournal)
+  }
 
   "As a user I want ot be able to" - {
     """open new order for current day with following information:
     | * provider
     | * ordering time
     | * expected delivery time
-    |""".stripMargin ignore {
+    |""".stripMargin in {
       val operationResult = openOrder as "WHO" from "Food House" orderedAt
         LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
       operationResult must be ('right)
@@ -39,7 +51,13 @@ class OrderTests extends ValidationTest {
 
     "update expected delivery time when marking the order as ordered" ignore()
 
-    "list all active (open, locked, ordered) orders" ignore()
+    "list all active (open, locked, ordered) orders" in {
+      listOrders must be ('empty)
+      val \/-(orderId) = openOrder as "WHO" from "Food House" orderedAt
+        LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
+
+      listOrders mustBe Seq(OrdersView.Order(orderId, "Opened", "WHO"))
+    }
 
     """add an item to any open order with following information
     | * description
@@ -56,9 +74,22 @@ class OrderTests extends ValidationTest {
       def from(provider: String) = new {
         def orderedAt(orderingTime: LocalTime) = new {
           def expectingDeliveryAt(expectedDeliveryTime: LocalTime) =
-            Await.result(system.handle(OpenOrder(provider, user, orderingTime, expectedDeliveryTime)), 1 second)
+            Await.result(
+              system.handle(
+                OpenOrder(
+                  provider,
+                  user,
+                  orderingTime,
+                  expectedDeliveryTime)),
+              1 second)
         }
       }
     }
   }
+
+  def listOrders =
+      Await.result(
+        system.handle(GetActiveOrders),
+        1 second)
+
 }

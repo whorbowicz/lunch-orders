@@ -10,8 +10,8 @@ import com.horbowicz.lunch.orders.domain.order.error.ImpossibleDeliveryTime
 import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 
+import scalaz.Scalaz._
 import scalaz._
-import Scalaz._
 
 class OpenOrderHandlerSpec extends BaseSpec
 {
@@ -31,29 +31,36 @@ class OpenOrderHandlerSpec extends BaseSpec
       val currentDateTime = LocalDateTime.now()
       idProvider.get _ expects() returning expectedId
       timeProvider.getCurrentDateTime _ expects() returning currentDateTime
-      eventPublisher.publish _ expects OrderOpened(
+      val orderOpenedEvent = OrderOpened(
         expectedId,
         currentDateTime,
         sampleCommand.provider,
         sampleCommand.personResponsible,
         sampleCommand.orderingTime,
         sampleCommand.expectedDeliveryTime)
+      eventPublisher.publish[OrderOpened] _ expects orderOpenedEvent returning (callback => callback(orderOpenedEvent))
 
-      handler.handle(sampleCommand) mustBe expectedId.right
+      handler.handle(sampleCommand) {
+        response => response mustBe expectedId.right
+      }
     }
 
     "returns error if expected delivery time is before ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime.minusHours(1))
 
-      handler.handle(command) mustBe ImpossibleDeliveryTime.left
+      handler.handle(command) {
+        response => response mustBe ImpossibleDeliveryTime.left
+      }
     }
 
     "returns error if expected delivery time is same as ordering time" in {
       val command = sampleCommand.copy(
         expectedDeliveryTime = sampleCommand.orderingTime)
 
-      handler.handle(command) mustBe ImpossibleDeliveryTime.left
+      handler.handle(command) {
+        response => response mustBe ImpossibleDeliveryTime.left
+      }
     }
   }
 }

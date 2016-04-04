@@ -16,8 +16,9 @@ lazy val coreValidation = (project in file("core-validation"))
   .settings(Settings.default: _*)
   .dependsOn(core, coreAkka)
   .settings(
-      name := "lunch-orders-core-validation",
-      libraryDependencies <++= scalaVersion(Dependencies.default))
+    name := "lunch-orders-core-validation",
+    libraryDependencies <++= scalaVersion(Dependencies.default),
+    libraryDependencies ++= Dependencies.akkaTest)
 
 lazy val root = (project in file("."))
   .settings(Settings.default: _*)

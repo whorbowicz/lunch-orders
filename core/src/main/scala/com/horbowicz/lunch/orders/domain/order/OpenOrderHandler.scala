@@ -17,16 +17,21 @@ class OpenOrderHandler(
   eventPublisher: EventPublisher)
   extends CommandHandler[OpenOrder, Id]
 {
-  override def handle(command: OpenOrder): Response =
+  override def handle(command: OpenOrder): Operation = callback =>
     if (command.expectedDeliveryTime.isAfter(command.orderingTime))
-      openOrder(command).right
+      openOrder(command) { event =>
+        callback(orderOpened(event).right)
+      }
     else
-      ImpossibleDeliveryTime.left
+      callback(ImpossibleDeliveryTime.left)
 
-  private def openOrder(command: OpenOrder) = {
+  private def openOrder(command: OpenOrder)(callback: OrderOpened => Unit) = {
     val id = idProvider.get()
-    eventPublisher.publish(createEvent(id, command))
-    id
+    eventPublisher.publish(createEvent(id, command))(callback)
+  }
+
+  private def orderOpened(event: OrderOpened) = {
+    event.id
   }
 
   private def createEvent(id: Id, command: OpenOrder) =

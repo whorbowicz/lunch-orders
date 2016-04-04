@@ -1,11 +1,11 @@
 package com.horbowicz.lunch.orders.domain.order
 
-import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
-import com.horbowicz.lunch.orders.{BaseSpec, domain}
+import com.horbowicz.lunch.orders.command.order.PlaceOrder
 import com.horbowicz.lunch.orders.domain.order.error.OrderNotFound
+import com.horbowicz.lunch.orders.{BaseSpec, domain}
 
+import scalaz.Scalaz._
 import scalaz._
-import Scalaz._
 
 class PlaceOrderHandlerSpec extends BaseSpec 
 {
@@ -21,16 +21,20 @@ class PlaceOrderHandlerSpec extends BaseSpec
     "returns Order not found error if order with given Id cannot be found" in {
       orderRepository.findById _ expects orderId returning OrderNotFound.left
 
-      handler.handle(sampleCommand) mustBe OrderNotFound.left
+      handler.handle(sampleCommand) {
+        response => response mustBe OrderNotFound.left
+      }
     }
 
     "passes command to Order with given Id if it was found " +
       "and returns Order's response back" in {
       val expectedResponse = ().right
       orderRepository.findById _ expects orderId returning order.right
-      order.place _ expects sampleCommand returning expectedResponse
+      order.place _ expects sampleCommand returning (callback => callback(expectedResponse))
 
-      handler.handle(sampleCommand) mustBe expectedResponse
+      handler.handle(sampleCommand){
+        response => response mustBe expectedResponse
+      }
     }
   }
 }

@@ -21,11 +21,13 @@ class OrderAggregate(
 {
   private var items = Seq.empty[Id]
 
-  override def addItem(command: AddOrderItem): CommandError \/ Id =
-    if (id != command.orderId) InvalidOrderId.left
-    else add(command).right
+  override def addItem(command: AddOrderItem): (CommandError \/ Id => Unit) => Unit = callback =>
+    if (id != command.orderId) callback(InvalidOrderId.left)
+    else add(command){event =>
+      callback(event.id.right)
+    }
 
-  private def add(command: AddOrderItem): Id = {
+  private def add(command: AddOrderItem)(callback: OrderItemAdded => Unit) = {
     val id = idProvider.get()
     eventPublisher.publish(
       OrderItemAdded(
@@ -34,16 +36,14 @@ class OrderAggregate(
         command.orderId,
         command.orderingPerson,
         command.description,
-        command.price))
-    id
+        command.price))(callback)
   }
 
-  override def place(command: PlaceOrder): CommandError \/ Unit =
+  override def place(command: PlaceOrder): (CommandError \/ Unit => Unit) => Unit = callback =>
     if(id != command.orderId) InvalidOrderId.left
     else if(items.isEmpty) UnfilledOrder.left
     else {
-      eventPublisher.publish(OrderPlaced(id, timeProvider.getCurrentDateTime, command.personResponsible))
-      ().right
+      eventPublisher.publish(OrderPlaced(id, timeProvider.getCurrentDateTime, command.personResponsible))(_ => callback(().right))
     }
 
   def applyEvent(event: OrderItemAdded) = event match {

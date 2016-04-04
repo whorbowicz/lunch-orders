@@ -23,5 +23,4 @@ class OrdersView {
   }
 
   def handle(query: GetActiveOrders.type): Seq[OrdersView.Order] = orders
-
 }

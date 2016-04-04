@@ -38,29 +38,38 @@ class OrderAggregateSpec extends BaseSpec
       val currentDateTime = LocalDateTime.now()
       idProvider.get _ expects() returning expectedId
       timeProvider.getCurrentDateTime _ expects() returning currentDateTime
-      eventPublisher.publish _ expects OrderItemAdded(
+      val orderItemAdded = OrderItemAdded(
         expectedId,
         currentDateTime,
         addItemCommand.orderId,
         addItemCommand.orderingPerson,
         addItemCommand.description,
         addItemCommand.price)
-      order.addItem(addItemCommand) mustBe expectedId.right
+      eventPublisher.publish[OrderItemAdded] _ expects orderItemAdded returning (callback => callback(orderItemAdded))
+      order.addItem(addItemCommand) {
+        response => response mustBe expectedId.right
+      }
     }
 
     "returns Invalid order id error " +
       "if add item command's order id does not match it's own id" in {
-      order.addItem(addItemCommand.copy(orderId = "456")) mustBe InvalidOrderId.left
+      order.addItem(addItemCommand.copy(orderId = "456")) {
+        response => response mustBe InvalidOrderId.left
+      }
     }
 
     "returns Invalid order id error " +
       "if place order command's order id does not match it's own id" in {
-      order.place(placeOrderCommand.copy(orderId = "456")) mustBe InvalidOrderId.left
+      order.place(placeOrderCommand.copy(orderId = "456")) {
+        response => response mustBe InvalidOrderId.left
+      }
     }
 
     "returns Unfilled order error " +
       "if no items were added to order before attempting to place it" in {
-      order.place(placeOrderCommand) mustBe UnfilledOrder.left
+      order.place(placeOrderCommand) {
+        response => response mustBe UnfilledOrder.left
+      }
     }
 
     "returns unit and publishes OrderPlaced event when placed successfully" in {
@@ -74,11 +83,14 @@ class OrderAggregateSpec extends BaseSpec
           addItemCommand.price))
       val currentDateTime = LocalDateTime.now()
       timeProvider.getCurrentDateTime _ expects() returning currentDateTime
-      eventPublisher.publish _ expects OrderPlaced(
+      val orderPlaced = OrderPlaced(
         orderId,
         currentDateTime,
         placeOrderCommand.personResponsible)
-      order.place(placeOrderCommand) mustBe ().right
+      eventPublisher.publish[OrderPlaced] _ expects orderPlaced returning (callback => callback(orderPlaced))
+      order.place(placeOrderCommand) {
+        response => response mustBe ().right
+      }
     }
   }
 }

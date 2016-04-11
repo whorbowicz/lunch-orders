@@ -1,6 +1,6 @@
 package com.horbowicz.lunch.orders.domain.order
 
-import com.horbowicz.lunch.orders.Global.Id
+import com.horbowicz.lunch.orders.Global.{Callback, Id}
 import com.horbowicz.lunch.orders.command.error.CommandError
 import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 import com.horbowicz.lunch.orders.common.TimeProvider
@@ -21,30 +21,40 @@ class OrderAggregate(
 {
   private var items = Seq.empty[Id]
 
-  override def addItem(command: AddOrderItem): (CommandError \/ Id => Unit) => Unit = callback =>
-    if (id != command.orderId) callback(InvalidOrderId.left)
-    else add(command){event =>
-      callback(event.id.right)
+  override def addItem(command: AddOrderItem): Callback[CommandError \/ Id] => Unit =
+    callback =>
+      if (id != command.orderId) callback(InvalidOrderId.left)
+      else add(command, callback)
+
+  private def add(command: AddOrderItem, callback: Callback[CommandError \/ Id]) =
+    eventPublisher.publish(createEvent(idProvider.get(), command)) {
+      event => callback(event.id.right)
     }
 
-  private def add(command: AddOrderItem)(callback: OrderItemAdded => Unit) = {
-    val id = idProvider.get()
-    eventPublisher.publish(
-      OrderItemAdded(
-        id,
-        timeProvider.getCurrentDateTime,
-        command.orderId,
-        command.orderingPerson,
-        command.description,
-        command.price))(callback)
-  }
+  private def createEvent(id: Id, command: AddOrderItem) =
+    OrderItemAdded(
+      id,
+      timeProvider.getCurrentDateTime,
+      command.orderId,
+      command.orderingPerson,
+      command.description,
+      command.price)
 
-  override def place(command: PlaceOrder): (CommandError \/ Unit => Unit) => Unit = callback =>
-    if(id != command.orderId) InvalidOrderId.left
-    else if(items.isEmpty) UnfilledOrder.left
-    else {
-      eventPublisher.publish(OrderPlaced(id, timeProvider.getCurrentDateTime, command.personResponsible))(_ => callback(().right))
+  override def place(command: PlaceOrder): Callback[CommandError \/ Unit] => Unit =
+    callback =>
+      if(id != command.orderId) InvalidOrderId.left
+      else if(items.isEmpty) UnfilledOrder.left
+      else {
+        placeOrder(command, callback)
+      }
+
+  private def placeOrder(command: PlaceOrder, callback: Callback[CommandError \/ Unit]) =
+    eventPublisher.publish(createEvent(command)) {
+      _ => callback(().right)
     }
+
+  private def createEvent(command: PlaceOrder): OrderPlaced =
+    OrderPlaced(id, timeProvider.getCurrentDateTime, command.personResponsible)
 
   def applyEvent(event: OrderItemAdded) = event match {
     case OrderItemAdded(itemId, _, this.id, _, _, _) => items = items :+ itemId

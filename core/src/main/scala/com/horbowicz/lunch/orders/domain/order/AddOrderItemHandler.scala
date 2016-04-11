@@ -9,10 +9,11 @@ import scalaz.Scalaz._
 class AddOrderItemHandler(orderRepository: OrderRepository)
   extends CommandHandler[AddOrderItem, Id]
 {
-  override def handle(command: AddOrderItem): Operation = callback =>
-    orderRepository
-      .findById(command.orderId)
-      .fold(
-        notFound => callback(notFound.left),
-        foundOrder => foundOrder.addItem(command)(callback))
+  override def handle(command: AddOrderItem): Operation =
+    callback =>
+      orderRepository
+        .findById(command.orderId)
+        .fold(
+          notFound => callback(notFound.left),
+          foundOrder => foundOrder.addItem(command)(callback))
 }

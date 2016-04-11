@@ -2,7 +2,7 @@ package com.horbowicz.lunch.orders.domain.order
 
 import akka.actor.{ActorLogging, Props}
 import akka.persistence.PersistentActor
-import com.horbowicz.lunch.orders.Global.Id
+import com.horbowicz.lunch.orders.Global.{Callback, Id}
 import com.horbowicz.lunch.orders.command.CommandHandler
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.event.{Event, EventPublisher}
@@ -13,8 +13,8 @@ object OpenOrderHandlerActor {
 
 class OpenOrderHandlerActor(handlerFactory: EventPublisher => CommandHandler[OpenOrder, Id]) extends PersistentActor with ActorLogging {
   private val handler: CommandHandler[OpenOrder, Id] = handlerFactory(new EventPublisher {
-    override def publish[E <: Event](event: E): (E => Unit) => Unit = callback =>
-      persist(event)(callback)
+    override def publish[E <: Event](event: E): Callback[E] => Unit =
+      callback => persist(event)(callback)
   })
 
   override def persistenceId: String = "open-order-handler"

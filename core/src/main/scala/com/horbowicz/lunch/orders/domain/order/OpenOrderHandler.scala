@@ -1,6 +1,6 @@
 package com.horbowicz.lunch.orders.domain.order
 
-import com.horbowicz.lunch.orders.Global.Id
+import com.horbowicz.lunch.orders.Global.{Callback, Id}
 import com.horbowicz.lunch.orders.command.CommandHandler
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
@@ -17,22 +17,16 @@ class OpenOrderHandler(
   eventPublisher: EventPublisher)
   extends CommandHandler[OpenOrder, Id]
 {
-  override def handle(command: OpenOrder): Operation = callback =>
-    if (command.expectedDeliveryTime.isAfter(command.orderingTime))
-      openOrder(command) { event =>
-        callback(orderOpened(event).right)
-      }
-    else
-      callback(ImpossibleDeliveryTime.left)
+  override def handle(command: OpenOrder): Operation =
+    callback =>
+      if (command.expectedDeliveryTime.isAfter(command.orderingTime))
+        openOrder(command)(callback)
+      else callback(ImpossibleDeliveryTime.left)
 
-  private def openOrder(command: OpenOrder)(callback: OrderOpened => Unit) = {
-    val id = idProvider.get()
-    eventPublisher.publish(createEvent(id, command))(callback)
-  }
-
-  private def orderOpened(event: OrderOpened) = {
-    event.id
-  }
+  private def openOrder(command: OpenOrder)(callback: Callback[Response]) =
+    eventPublisher.publish(createEvent(idProvider.get(), command)) {
+      event => callback(event.id.right)
+    }
 
   private def createEvent(id: Id, command: OpenOrder) =
     OrderOpened(

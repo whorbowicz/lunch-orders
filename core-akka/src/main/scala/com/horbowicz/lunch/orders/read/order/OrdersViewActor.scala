@@ -1,11 +1,11 @@
 package com.horbowicz.lunch.orders.read.order
 
 import akka.actor.{Actor, ActorLogging, Props}
-import akka.persistence.query.PersistenceQuery
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 import com.horbowicz.lunch.orders.query.order.GetActiveOrders
 
 object OrdersViewActor {
+
   def props(handler: OrdersView) = Props(classOf[OrdersViewActor], handler)
 }
 

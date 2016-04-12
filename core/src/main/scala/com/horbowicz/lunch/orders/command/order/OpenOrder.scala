@@ -10,4 +10,4 @@ case class OpenOrder(
   personResponsible: String,
   orderingTime: LocalTime,
   expectedDeliveryTime: LocalTime)
-extends Command[Id]
+  extends Command[Id]

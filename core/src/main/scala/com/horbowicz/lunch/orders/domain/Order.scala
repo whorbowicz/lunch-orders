@@ -6,8 +6,9 @@ import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 
 import scalaz.\/
 
-trait Order
-{
+trait Order {
+
   def addItem(command: AddOrderItem): Callback[CommandError \/ Id] => Unit
+
   def place(command: PlaceOrder): Callback[CommandError \/ Unit] => Unit
 }

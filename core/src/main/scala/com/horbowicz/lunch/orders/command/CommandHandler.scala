@@ -5,10 +5,10 @@ import com.horbowicz.lunch.orders.command.error.CommandError
 
 import scalaz.\/
 
-trait CommandHandler[C <: Command[R], R]
-{
+trait CommandHandler[C <: Command[R], R] {
+
   type Response = CommandError \/ R
   type Operation = Callback[Response] => Unit
 
-  def handle(command: C) : Operation
+  def handle(command: C): Operation
 }

@@ -6,10 +6,8 @@ import com.horbowicz.lunch.orders.BaseSpec
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 import com.horbowicz.lunch.orders.query.order.GetActiveOrders
 
-import scalaz._
-import Scalaz._
-
 class OrdersViewSpec extends BaseSpec {
+
   private val handler = new OrdersView()
   private val foodHouseOrderOpened =
     OrderOpened(

@@ -8,14 +8,22 @@ import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.event.{Event, EventPublisher}
 
 object OpenOrderHandlerActor {
-  def props(handlerFactory: EventPublisher => CommandHandler[OpenOrder, Id]) = Props(classOf[OpenOrderHandlerActor], handlerFactory)
+
+  def props(handlerFactory: EventPublisher => CommandHandler[OpenOrder, Id]) =
+    Props(
+      classOf[OpenOrderHandlerActor],
+      handlerFactory)
 }
 
-class OpenOrderHandlerActor(handlerFactory: EventPublisher => CommandHandler[OpenOrder, Id]) extends PersistentActor with ActorLogging {
-  private val handler: CommandHandler[OpenOrder, Id] = handlerFactory(new EventPublisher {
-    override def publish[E <: Event](event: E): Callback[E] => Unit =
-      callback => persist(event)(callback)
-  })
+class OpenOrderHandlerActor(
+  handlerFactory: EventPublisher => CommandHandler[OpenOrder, Id])
+  extends PersistentActor with ActorLogging {
+
+  private val handler: CommandHandler[OpenOrder, Id] = handlerFactory(
+    new EventPublisher {
+      override def publish[E <: Event](event: E): Callback[E] => Unit =
+        callback => persist(event)(callback)
+    })
 
   override def persistenceId: String = "open-order-handler"
 

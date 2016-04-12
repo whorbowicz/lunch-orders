@@ -6,8 +6,8 @@ import com.horbowicz.lunch.orders.{BaseSpec, domain}
 
 import scalaz.Scalaz._
 
-class AddOrderItemHandlerSpec extends BaseSpec
-{
+class AddOrderItemHandlerSpec extends BaseSpec {
+
   private val orderId = "123"
   private val order = mock[domain.Order]
   private val orderRepository = mock[OrderRepository]
@@ -31,7 +31,8 @@ class AddOrderItemHandlerSpec extends BaseSpec
       "and returns Order's response back" in {
       val expectedResponse = "12345".right
       orderRepository.findById _ expects orderId returning order.right
-      order.addItem _ expects sampleCommand returning (callback => callback(expectedResponse))
+      order.addItem _ expects sampleCommand returning
+        (callback => callback(expectedResponse))
 
       handler.handle(sampleCommand) {
         response => response mustBe expectedResponse

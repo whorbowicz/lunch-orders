@@ -6,8 +6,8 @@ import com.horbowicz.lunch.orders.domain.order.error.OrderNotFound
 
 import scalaz._
 
-trait OrderRepository
-{
+trait OrderRepository {
+
   type Response = OrderNotFound.type \/ Order
 
   def findById(id: Id): Response

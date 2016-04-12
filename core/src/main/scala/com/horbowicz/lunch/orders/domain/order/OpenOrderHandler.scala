@@ -15,8 +15,8 @@ class OpenOrderHandler(
   idProvider: IdProvider,
   timeProvider: TimeProvider,
   eventPublisher: EventPublisher)
-  extends CommandHandler[OpenOrder, Id]
-{
+  extends CommandHandler[OpenOrder, Id] {
+
   override def handle(command: OpenOrder): Operation =
     callback =>
       if (command.expectedDeliveryTime.isAfter(command.orderingTime))

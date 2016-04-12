@@ -8,4 +8,4 @@ case class AddOrderItem(
   orderingPerson: String,
   description: String,
   price: BigDecimal)
-extends Command[Id]
+  extends Command[Id]

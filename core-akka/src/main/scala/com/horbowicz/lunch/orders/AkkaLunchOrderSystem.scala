@@ -1,10 +1,10 @@
 package com.horbowicz.lunch.orders
+
 import java.time.LocalDateTime
 import java.util.UUID
 
-import akka.actor.{Actor, ActorSystem, PoisonPill}
+import akka.actor.{ActorSystem, PoisonPill}
 import akka.pattern.ask
-import akka.persistence.query.PersistenceQuery
 import akka.persistence.query.scaladsl.{EventsByPersistenceIdQuery, ReadJournal}
 import akka.stream.{ActorMaterializer, scaladsl}
 import akka.util.Timeout
@@ -15,7 +15,6 @@ import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order.{OpenOrderHandler, OpenOrderHandlerActor}
-import com.horbowicz.lunch.orders.event.{Event, EventPublisher}
 import com.horbowicz.lunch.orders.query.order.GetActiveOrders
 import com.horbowicz.lunch.orders.read.order.{OrdersView, OrdersViewActor}
 
@@ -40,17 +39,30 @@ class AkkaLunchOrderSystem(
   implicit val mat = ActorMaterializer()(actorSystem)
 
   private lazy val openOrderHandler =
-    actorSystem.actorOf(OpenOrderHandlerActor.props(eventPublisher => new OpenOrderHandler(idProvider, timeProvider, eventPublisher)), "open-order-handler")
-  private lazy val ordersView = actorSystem.actorOf(OrdersViewActor.props(new OrdersView()))
-  readJournal.eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue).map(_.event).runWith(scaladsl.Sink.actorRef(ordersView, PoisonPill))
+    actorSystem
+      .actorOf(
+        OpenOrderHandlerActor
+          .props(
+            eventPublisher => new OpenOrderHandler(
+              idProvider,
+              timeProvider,
+              eventPublisher)),
+        "open-order-handler")
+  private lazy val ordersView = actorSystem
+    .actorOf(OrdersViewActor.props(new OrdersView()))
+  readJournal
+    .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
+    .map(_.event)
+    .runWith(scaladsl.Sink.actorRef(ordersView, PoisonPill))
 
   private implicit val timeout: Timeout = 1 second
 
-  override def handle[Response](command: Command[Response]): Future[CommandError \/ Response] = {
+  override def handle[Response](command: Command[Response]): Future[
+    CommandError \/ Response] = {
     command match {
       case openOrder: OpenOrder =>
         (openOrderHandler ? openOrder).mapTo[CommandError \/ Response]
-      case _ => Future.successful(new CommandError{}.left)
+      case _ => Future.successful(new CommandError {}.left)
     }
   }
 

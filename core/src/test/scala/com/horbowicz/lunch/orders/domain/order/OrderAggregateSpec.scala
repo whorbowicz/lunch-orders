@@ -12,8 +12,8 @@ import com.horbowicz.lunch.orders.event.order.{OrderItemAdded, OrderPlaced}
 
 import scalaz.Scalaz._
 
-class OrderAggregateSpec extends BaseSpec
-{
+class OrderAggregateSpec extends BaseSpec {
+
   private val orderId = "123"
   private val idProvider = mock[IdProvider]
   private val timeProvider = mock[TimeProvider]
@@ -45,7 +45,8 @@ class OrderAggregateSpec extends BaseSpec
         addItemCommand.orderingPerson,
         addItemCommand.description,
         addItemCommand.price)
-      eventPublisher.publish[OrderItemAdded] _ expects orderItemAdded returning (callback => callback(orderItemAdded))
+      eventPublisher.publish[OrderItemAdded] _ expects orderItemAdded returning
+        (callback => callback(orderItemAdded))
       order.addItem(addItemCommand) {
         response => response mustBe expectedId.right
       }
@@ -87,7 +88,8 @@ class OrderAggregateSpec extends BaseSpec
         orderId,
         currentDateTime,
         placeOrderCommand.personResponsible)
-      eventPublisher.publish[OrderPlaced] _ expects orderPlaced returning (callback => callback(orderPlaced))
+      eventPublisher.publish[OrderPlaced] _ expects orderPlaced returning
+        (callback => callback(orderPlaced))
       order.place(placeOrderCommand) {
         response => response mustBe ().right
       }

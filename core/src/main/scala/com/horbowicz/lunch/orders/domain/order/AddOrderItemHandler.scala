@@ -7,8 +7,8 @@ import com.horbowicz.lunch.orders.command.order.AddOrderItem
 import scalaz.Scalaz._
 
 class AddOrderItemHandler(orderRepository: OrderRepository)
-  extends CommandHandler[AddOrderItem, Id]
-{
+  extends CommandHandler[AddOrderItem, Id] {
+
   override def handle(command: AddOrderItem): Operation =
     callback =>
       orderRepository

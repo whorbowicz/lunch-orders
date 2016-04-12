@@ -11,14 +11,16 @@ import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 
 import scalaz.Scalaz._
-import scalaz._
 
-class OpenOrderHandlerSpec extends BaseSpec
-{
+class OpenOrderHandlerSpec extends BaseSpec {
+
   private val idProvider = mock[IdProvider]
   private val timeProvider = mock[TimeProvider]
   private val eventPublisher = mock[EventPublisher]
-  private val handler = new OpenOrderHandler(idProvider, timeProvider, eventPublisher)
+  private val handler = new OpenOrderHandler(
+    idProvider,
+    timeProvider,
+    eventPublisher)
   private val sampleCommand = OpenOrder(
     provider = "Food House",
     personResponsible = "WHO",
@@ -38,7 +40,8 @@ class OpenOrderHandlerSpec extends BaseSpec
         sampleCommand.personResponsible,
         sampleCommand.orderingTime,
         sampleCommand.expectedDeliveryTime)
-      eventPublisher.publish[OrderOpened] _ expects orderOpenedEvent returning (callback => callback(orderOpenedEvent))
+      eventPublisher.publish[OrderOpened] _ expects orderOpenedEvent returning
+        (callback => callback(orderOpenedEvent))
 
       handler.handle(sampleCommand) {
         response => response mustBe expectedId.right

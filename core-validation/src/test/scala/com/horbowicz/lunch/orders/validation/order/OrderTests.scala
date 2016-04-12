@@ -5,11 +5,11 @@ import java.time.LocalTime
 import akka.actor.ActorSystem
 import akka.persistence.inmemory.query.journal.scaladsl.InMemoryReadJournal
 import akka.persistence.query.PersistenceQuery
+import com.horbowicz.lunch.orders._
 import com.horbowicz.lunch.orders.command.order.{AddOrderItem, OpenOrder}
 import com.horbowicz.lunch.orders.query.order.GetActiveOrders
 import com.horbowicz.lunch.orders.read.order.OrdersView
 import com.horbowicz.lunch.orders.validation.ValidationTest
-import com.horbowicz.lunch.orders.{AkkaLunchOrderSystem, Global, LunchOrderSystem}
 import org.scalatest.BeforeAndAfter
 
 import scala.collection.immutable.Seq
@@ -19,6 +19,7 @@ import scala.language.postfixOps
 import scalaz._
 
 class OrderTests extends ValidationTest with BeforeAndAfter {
+
   private var system: LunchOrderSystem = _
 
   before {
@@ -30,13 +31,13 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
 
   "As a user I want ot be able to" - {
     """open new order for current day with following information:
-    | * provider
-    | * ordering time
-    | * expected delivery time
-    |""".stripMargin in {
+      | * provider
+      | * ordering time
+      | * expected delivery time
+      | """.stripMargin in {
       val operationResult = openOrder as "WHO" from "Food House" orderedAt
         LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
-      operationResult must be ('right)
+      operationResult must be('right)
     }
 
     "open new order with a future order and delivery dates" ignore()
@@ -54,7 +55,7 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
     "update expected delivery time when marking the order as ordered" ignore()
 
     "list all active (open, locked, ordered) orders" in {
-      listOrders must be ('empty)
+      listOrders must be('empty)
       val \/-(orderId) = openOrder as "WHO" from "Food House" orderedAt
         LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
 
@@ -62,14 +63,14 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
     }
 
     """add an item to any open order with following information
-    | * description
-    | * price
-    |""".stripMargin in {
+      | * description
+      | * price
+      | """.stripMargin in {
       val \/-(orderId) = openOrder as "WHO" from "Food House" orderedAt
         LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
-      val operationResult = addOrderItem as "HBO" toOrder orderId withDescription
-        "Meat dumplings, salad" `for` "15.50"
-      operationResult must be ('right)
+      val operationResult = addOrderItem as "HBO" toOrder
+        orderId withDescription "Meat dumplings, salad" `for` "15.50"
+      operationResult must be('right)
     }
 
     "edit order item that I have added while the order is opened" ignore()
@@ -78,6 +79,7 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
   }
 
   object openOrder {
+
     def as(user: String) = new {
       def from(provider: String) = new {
         def orderedAt(orderingTime: LocalTime) = new {
@@ -96,6 +98,7 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
   }
 
   object addOrderItem {
+
     def as(user: String) = new {
       def toOrder(orderId: Global.Id) = new {
         def withDescription(description: String) = new {
@@ -114,8 +117,8 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
   }
 
   def listOrders =
-      Await.result(
-        system.handle(GetActiveOrders),
-        1 second)
+    Await.result(
+      system.handle(GetActiveOrders),
+      1 second)
 
 }

@@ -17,16 +17,20 @@ class OrderAggregate(
   idProvider: IdProvider,
   timeProvider: TimeProvider,
   eventPublisher: EventPublisher)
-  extends Order
-{
+  extends Order {
+
   private var items = Seq.empty[Id]
 
-  override def addItem(command: AddOrderItem): Callback[CommandError \/ Id] => Unit =
+  override def addItem(
+    command: AddOrderItem
+  ): Callback[CommandError \/ Id] => Unit =
     callback =>
       if (id != command.orderId) callback(InvalidOrderId.left)
       else add(command, callback)
 
-  private def add(command: AddOrderItem, callback: Callback[CommandError \/ Id]) =
+  private def add(
+    command: AddOrderItem,
+    callback: Callback[CommandError \/ Id]) =
     eventPublisher.publish(createEvent(idProvider.get(), command)) {
       event => callback(event.id.right)
     }
@@ -40,15 +44,18 @@ class OrderAggregate(
       command.description,
       command.price)
 
-  override def place(command: PlaceOrder): Callback[CommandError \/ Unit] => Unit =
+  override def place(
+    command: PlaceOrder
+  ): Callback[CommandError \/ Unit] => Unit =
     callback =>
-      if(id != command.orderId) InvalidOrderId.left
-      else if(items.isEmpty) UnfilledOrder.left
-      else {
-        placeOrder(command, callback)
-      }
+      if (id != command.orderId) callback(InvalidOrderId.left)
+      else if (items.isEmpty) callback(UnfilledOrder.left)
+      else placeOrder(command, callback)
 
-  private def placeOrder(command: PlaceOrder, callback: Callback[CommandError \/ Unit]) =
+  private def placeOrder(
+    command: PlaceOrder,
+    callback: Callback[CommandError \/ Unit]
+  ): Unit =
     eventPublisher.publish(createEvent(command)) {
       _ => callback(().right)
     }

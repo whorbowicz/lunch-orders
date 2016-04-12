@@ -5,6 +5,7 @@ import java.time._
 import com.horbowicz.lunch.orders.BaseSpec
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
+import com.horbowicz.lunch.orders.common.callback._
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order.error.ImpossibleDeliveryTime
 import com.horbowicz.lunch.orders.event.EventPublisher
@@ -41,7 +42,7 @@ class OpenOrderHandlerSpec extends BaseSpec {
         sampleCommand.orderingTime,
         sampleCommand.expectedDeliveryTime)
       eventPublisher.publish[OrderOpened] _ expects orderOpenedEvent returning
-        (callback => callback(orderOpenedEvent))
+        orderOpenedEvent.response
 
       handler.handle(sampleCommand) {
         response => response mustBe expectedId.right

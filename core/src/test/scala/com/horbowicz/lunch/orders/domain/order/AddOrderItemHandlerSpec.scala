@@ -1,6 +1,7 @@
 package com.horbowicz.lunch.orders.domain.order
 
 import com.horbowicz.lunch.orders.command.order.AddOrderItem
+import com.horbowicz.lunch.orders.common.callback._
 import com.horbowicz.lunch.orders.domain.order.error.OrderNotFound
 import com.horbowicz.lunch.orders.{BaseSpec, domain}
 
@@ -29,13 +30,13 @@ class AddOrderItemHandlerSpec extends BaseSpec {
 
     "passes command to Order with given Id if it was found " +
       "and returns Order's response back" in {
-      val expectedResponse = "12345".right
+      val expectedId = "12345"
       orderRepository.findById _ expects orderId returning order.right
       order.addItem _ expects sampleCommand returning
-        (callback => callback(expectedResponse))
+        expectedId.right.response
 
       handler.handle(sampleCommand) {
-        response => response mustBe expectedResponse
+        response => response mustBe expectedId.right
       }
     }
   }

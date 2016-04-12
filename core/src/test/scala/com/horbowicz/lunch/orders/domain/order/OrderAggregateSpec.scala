@@ -5,8 +5,9 @@ import java.time.LocalDateTime
 import com.horbowicz.lunch.orders.BaseSpec
 import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 import com.horbowicz.lunch.orders.common.TimeProvider
+import com.horbowicz.lunch.orders.common.callback._
 import com.horbowicz.lunch.orders.domain.IdProvider
-import com.horbowicz.lunch.orders.domain.order.error.{InvalidOrderId, UnfilledOrder}
+import com.horbowicz.lunch.orders.domain.order.error._
 import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.{OrderItemAdded, OrderPlaced}
 
@@ -46,7 +47,7 @@ class OrderAggregateSpec extends BaseSpec {
         addItemCommand.description,
         addItemCommand.price)
       eventPublisher.publish[OrderItemAdded] _ expects orderItemAdded returning
-        (callback => callback(orderItemAdded))
+        orderItemAdded.response
       order.addItem(addItemCommand) {
         response => response mustBe expectedId.right
       }
@@ -89,7 +90,7 @@ class OrderAggregateSpec extends BaseSpec {
         currentDateTime,
         placeOrderCommand.personResponsible)
       eventPublisher.publish[OrderPlaced] _ expects orderPlaced returning
-        (callback => callback(orderPlaced))
+        orderPlaced.response
       order.place(placeOrderCommand) {
         response => response mustBe ().right
       }

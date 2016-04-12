@@ -10,7 +10,8 @@ object Dependencies {
   val scalaz = "org.scalaz" %% "scalaz-core" % "7.1.4"
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaPersistence = "com.typesafe.akka" %% "akka-persistence" % akkaVersion
-  val akkaContrib = "com.typesafe.akka" %% "akka-contrib" % akkaVersion
+  val akkaClusterSharding = "com.typesafe.akka" %% "akka-cluster-sharding" %
+    akkaVersion
   val akkaPersistenceExperimental = "com.typesafe.akka" %%
     "akka-persistence-query-experimental" % akkaVersion
   val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test
@@ -31,7 +32,7 @@ object Dependencies {
   val akka = Seq(
     akkaActor,
     akkaPersistence,
-    akkaContrib,
+    akkaClusterSharding,
     akkaPersistenceExperimental
   )
 

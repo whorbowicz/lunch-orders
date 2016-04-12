@@ -91,7 +91,7 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
                   user,
                   orderingTime,
                   expectedDeliveryTime)),
-              1 second)
+              2 second)
         }
       }
     }
@@ -110,7 +110,7 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
                   user,
                   description,
                   BigDecimal(price))),
-              1 second)
+              2 second)
         }
       }
     }
@@ -119,6 +119,6 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
   def listOrders =
     Await.result(
       system.handle(GetActiveOrders),
-      1 second)
+      2 second)
 
 }

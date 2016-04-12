@@ -1,8 +1,8 @@
 package com.horbowicz.lunch.orders.event
 
-import com.horbowicz.lunch.orders.Global.Callback
+import com.horbowicz.lunch.orders.common.callback.CallbackHandler
 
 trait EventPublisher {
 
-  def publish[E <: Event](event: E): Callback[E] => Unit
+  def publish[E <: Event](event: E): CallbackHandler[E]
 }

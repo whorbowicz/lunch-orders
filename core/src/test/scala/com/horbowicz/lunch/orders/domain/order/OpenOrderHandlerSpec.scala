@@ -42,7 +42,7 @@ class OpenOrderHandlerSpec extends BaseSpec {
         sampleCommand.orderingTime,
         sampleCommand.expectedDeliveryTime)
       eventPublisher.publish[OrderOpened] _ expects orderOpenedEvent returning
-        orderOpenedEvent.response
+        orderOpenedEvent.point[CallbackHandler]
 
       handler.handle(sampleCommand) {
         response => response mustBe expectedId.right

@@ -23,7 +23,7 @@ class OpenOrderHandlerActor(
   private val handler: CommandHandler[OpenOrder, Id] = handlerFactory(
     new EventPublisher {
       override def publish[E <: Event](event: E): CallbackHandler[E] =
-        (persist(event) _).callbackHandler
+        (persist(event) _)
     })
 
   override def persistenceId: String = "open-order-handler"

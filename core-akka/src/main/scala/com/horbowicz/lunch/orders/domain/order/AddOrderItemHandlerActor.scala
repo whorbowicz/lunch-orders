@@ -30,10 +30,10 @@ class AddOrderItemHandlerActor(orders: ActorRef)
   private val handler = new AddOrderItemHandler(
     new OrderRepository {
       override def findById(id: Id): CallbackHandler[Response] =
-        ((callback: Callback[Response]) => {
+        (callback: Callback[Response]) => {
           orders ! OrdersActor.FindOrder(id)
           callbacks = callbacks + (id -> callback)
-        }).callbackHandler
+        }
 
     })
 
@@ -55,12 +55,12 @@ class AddOrderItemHandlerActor(orders: ActorRef)
 
   private def wrapper(orderId: Id, orderRef: ActorRef): Order = new Order {
     override def addItem(command: AddOrderItem): CallbackHandler[\/[CommandError, Id]] =
-      ((callback: Callback[CommandError \/ Id]) => {
+      (callback: Callback[CommandError \/ Id]) => {
         import context.dispatcher
         (orderRef ? command).mapTo[CommandError \/ Id]
           .map(response => (orderId, response)) pipeTo self
         orderCallbacks = orderCallbacks + (orderId -> callback)
-      }).callbackHandler
+      }
 
     override def place(command: PlaceOrder): CallbackHandler[\/[CommandError, Unit]] = ???
   }

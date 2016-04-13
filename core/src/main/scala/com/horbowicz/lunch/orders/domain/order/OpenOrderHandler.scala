@@ -20,8 +20,8 @@ class OpenOrderHandler(
 
   override def handle(command: OpenOrder): Operation =
     if (command.expectedDeliveryTime.isAfter(command.orderingTime))
-      openOrder(command).callbackHandler
-    else ImpossibleDeliveryTime.left.response
+      openOrder(command)
+    else ImpossibleDeliveryTime.left.point[CallbackHandler]
 
   private def openOrder(command: OpenOrder): Callback[Response] => Unit =
     callback =>

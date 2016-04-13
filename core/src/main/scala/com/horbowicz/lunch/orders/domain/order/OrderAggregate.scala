@@ -4,7 +4,7 @@ import com.horbowicz.lunch.orders.Global.Id
 import com.horbowicz.lunch.orders.command.error.CommandError
 import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 import com.horbowicz.lunch.orders.common.TimeProvider
-import com.horbowicz.lunch.orders.common.callback.{Callback, CallbackHandler, _}
+import com.horbowicz.lunch.orders.common.callback._
 import com.horbowicz.lunch.orders.domain.order.error.{InvalidOrderId, UnfilledOrder}
 import com.horbowicz.lunch.orders.domain.{IdProvider, Order}
 import com.horbowicz.lunch.orders.event.EventPublisher
@@ -25,8 +25,8 @@ class OrderAggregate(
   override def addItem(
     command: AddOrderItem
   ): CallbackHandler[CommandError \/ Id] =
-    if (id != command.orderId) InvalidOrderId.left.response
-    else add(command).callbackHandler
+    if (id != command.orderId) InvalidOrderId.left.point[CallbackHandler]
+    else add(command)
 
   private def add(
     command: AddOrderItem
@@ -50,9 +50,9 @@ class OrderAggregate(
   override def place(
     command: PlaceOrder
   ): CallbackHandler[CommandError \/ Unit] =
-    if (id != command.orderId) InvalidOrderId.left.response
-    else if (items.isEmpty) UnfilledOrder.left.response
-    else placeOrder(command).callbackHandler
+    if (id != command.orderId) InvalidOrderId.left.point[CallbackHandler]
+    else if (items.isEmpty) UnfilledOrder.left.point[CallbackHandler]
+    else placeOrder(command)
 
   private def placeOrder(
     command: PlaceOrder

@@ -22,7 +22,7 @@ class AddOrderItemHandlerSpec extends BaseSpec {
   "Add order item handler" - {
     "returns Order not found error if order with given Id cannot be found" in {
       orderRepository.findById _ expects orderId returning
-        OrderNotFound.left.response
+        OrderNotFound.left.point[CallbackHandler]
 
       handler.handle(sampleCommand) {
         response => response mustBe OrderNotFound.left
@@ -32,9 +32,10 @@ class AddOrderItemHandlerSpec extends BaseSpec {
     "passes command to Order with given Id if it was found " +
       "and returns Order's response back" in {
       val expectedId = "12345"
-      orderRepository.findById _ expects orderId returning order.right.response
+      orderRepository.findById _ expects orderId returning
+        order.right.point[CallbackHandler]
       order.addItem _ expects sampleCommand returning
-        expectedId.right.response
+        expectedId.right.point[CallbackHandler]
 
       handler.handle(sampleCommand) {
         response => response mustBe expectedId.right

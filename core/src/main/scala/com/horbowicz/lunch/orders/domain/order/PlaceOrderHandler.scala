@@ -10,11 +10,10 @@ class PlaceOrderHandler(orderRepository: OrderRepository)
   extends CommandHandler[PlaceOrder, Unit] {
 
   def handle(command: PlaceOrder): Operation =
-    ((callback: Response => Unit) => {
-      orderRepository.findById(command.orderId) {
-        (response: orderRepository.Response) => response.fold(
-          notFound => notFound.left.response,
-          foundOrder => foundOrder.place(command))(callback)
-      }
-    }).callbackHandler
+    orderRepository.findById(command.orderId).flatMap(
+      _.fold(
+        notFound => notFound.left.point[CallbackHandler],
+        foundOrder => foundOrder.place(command)
+      )
+    )
 }

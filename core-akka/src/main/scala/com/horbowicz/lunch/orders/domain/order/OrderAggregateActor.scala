@@ -5,7 +5,7 @@ import akka.persistence.PersistentActor
 import com.horbowicz.lunch.orders.Global
 import com.horbowicz.lunch.orders.command.order.AddOrderItem
 import com.horbowicz.lunch.orders.common.TimeProvider
-import com.horbowicz.lunch.orders.common.callback.{CallbackHandler, _}
+import com.horbowicz.lunch.orders.common.callback.CallbackHandler
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.event.{Event, EventPublisher}
 
@@ -33,7 +33,7 @@ class OrderAggregateActor(
   private val order = new OrderAggregate(
     orderId, idProvider, timeProvider, new EventPublisher {
       override def publish[E <: Event](event: E): CallbackHandler[E] =
-        (persist(event) _).callbackHandler
+        (persist(event) _)
     })
 
   override def receiveRecover: Receive = {

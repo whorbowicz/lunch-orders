@@ -52,7 +52,7 @@ class OrderAggregateSpec extends BaseSpec {
         addItemCommand.description,
         addItemCommand.price)
       eventPublisher.publish[OrderItemAdded] _ expects orderItemAdded returning
-        orderItemAdded.response
+        orderItemAdded.point[CallbackHandler]
       order.addItem(addItemCommand) {
         response => response mustBe expectedId.right
       }
@@ -95,7 +95,7 @@ class OrderAggregateSpec extends BaseSpec {
         currentDateTime,
         placeOrderCommand.personResponsible)
       eventPublisher.publish[OrderPlaced] _ expects orderPlaced returning
-        orderPlaced.response
+        orderPlaced.point[CallbackHandler]
       order.place(placeOrderCommand) {
         response => response mustBe ().right
       }

@@ -33,7 +33,9 @@ class OrderAggregate(
   ): Callback[CommandError \/ Id] => Unit =
     callback =>
       eventPublisher.publish(createEvent(idProvider.get(), command)) {
-        event => callback(event.id.right)
+        event =>
+          applyEvent(event)
+          callback(event.id.right)
       }
 
   private def createEvent(id: Id, command: AddOrderItem) =

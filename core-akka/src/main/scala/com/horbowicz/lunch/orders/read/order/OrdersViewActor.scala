@@ -16,7 +16,7 @@ class OrdersViewActor(handler: OrdersView) extends Actor with ActorLogging {
       log.info(s"event $event")
       handler.applyEvent(event)
     case query: GetActiveOrders.type =>
-      log.debug(s"query $query")
+      log.info(s"query $query")
       sender ! handler.handle(query)
   }
 }

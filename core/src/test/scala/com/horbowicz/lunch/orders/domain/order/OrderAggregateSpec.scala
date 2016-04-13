@@ -19,11 +19,6 @@ class OrderAggregateSpec extends BaseSpec {
   private val idProvider = mock[IdProvider]
   private val timeProvider = mock[TimeProvider]
   private val eventPublisher = mock[EventPublisher]
-  private val order = new OrderAggregate(
-    orderId,
-    idProvider,
-    timeProvider,
-    eventPublisher)
   private val addItemCommand = AddOrderItem(
     orderId,
     orderingPerson = "WHO",
@@ -32,6 +27,16 @@ class OrderAggregateSpec extends BaseSpec {
   private val placeOrderCommand = PlaceOrder(
     orderId,
     personResponsible = "WHO")
+
+  private var order: OrderAggregate = _
+
+  before {
+    order = new OrderAggregate(
+      orderId,
+      idProvider,
+      timeProvider,
+      eventPublisher)
+  }
 
   "Order" - {
     "returns Id of newly added item and publishes OrderItemAdded event" in {

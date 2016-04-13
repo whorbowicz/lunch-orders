@@ -29,13 +29,14 @@ class OpenOrderHandlerActor(
   override def persistenceId: String = "open-order-handler"
 
   override def receiveRecover: Receive = {
-    case _ =>
+    case x => log.info(s"Received recover $x")
   }
 
   override def receiveCommand: Receive = {
     case openOrder: OpenOrder =>
-      log.debug(s"Received $openOrder")
-      handler.handle(openOrder)(response => sender() ! response)
+      log.info(s"Received $openOrder")
+      val currentSender = sender()
+      handler.handle(openOrder)(response => currentSender ! response)
   }
 
 }

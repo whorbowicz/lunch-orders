@@ -1,44 +1,55 @@
 package com.horbowicz.lunch.orders.domain.order
 
+import akka.actor.{ActorRef, ActorSystem}
+import akka.testkit.TestProbe
+import com.horbowicz.lunch.orders._
 import com.horbowicz.lunch.orders.command.order.AddOrderItem
-import com.horbowicz.lunch.orders.common.callback._
+import com.horbowicz.lunch.orders.domain.order.OrdersActor.{FindOrder, OrderFound}
 import com.horbowicz.lunch.orders.domain.order.error.OrderNotFound
-import com.horbowicz.lunch.orders.{BaseSpec, domain}
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scalaz.Scalaz._
 
-class AddOrderItemHandlerSpec extends BaseSpec {
+class AddOrderItemHandlerSpec
+  extends BaseActorSpec(ActorSystem("AddOrderItemHandlerSpec")) {
 
   private val orderId = "123"
-  private val order = mock[domain.Order]
-  private val orderRepository = mock[OrderRepository]
-  private val handler = new AddOrderItemHandler(orderRepository)
-  private val sampleCommand = AddOrderItem(
+  private val addOrderItem = AddOrderItem(
     orderId,
     orderingPerson = "WHO",
     description = "Cheeseburger with chips and diet Coke",
     price = BigDecimal("15.99"))
+  private var handler: ActorRef = _
+  private val ordersProbe = TestProbe()
+  private val orderProbe = TestProbe()
+
+
+  before {
+    handler = system.actorOf(AddOrderItemHandler.props(ordersProbe.ref))
+  }
 
   "Add order item handler" - {
     "returns Order not found error if order with given Id cannot be found" in {
-      orderRepository.findById _ expects orderId returning
-        OrderNotFound.left.point[CallbackHandler]
-
-      handler.handle(sampleCommand) {
-        response => response mustBe OrderNotFound.left
+      within(1 second) {
+        handler ! addOrderItem
+        ordersProbe.expectMsg(FindOrder(orderId))
+        ordersProbe.reply((orderId, OrderNotFound))
+        expectMsg(OrderNotFound.left)
       }
     }
 
     "passes command to Order with given Id if it was found " +
       "and returns Order's response back" in {
       val expectedId = "12345"
-      orderRepository.findById _ expects orderId returning
-        order.right.point[CallbackHandler]
-      order.addItem _ expects sampleCommand returning
-        expectedId.right.point[CallbackHandler]
 
-      handler.handle(sampleCommand) {
-        response => response mustBe expectedId.right
+      within(1 second) {
+        handler ! addOrderItem
+        ordersProbe.expectMsg(FindOrder(orderId))
+        ordersProbe.reply(OrderFound(orderId, orderProbe.ref))
+        orderProbe.expectMsg(addOrderItem)
+        orderProbe.reply(expectedId.right)
+        expectMsg(expectedId.right)
       }
     }
   }

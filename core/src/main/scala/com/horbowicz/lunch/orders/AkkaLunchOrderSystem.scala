@@ -54,7 +54,7 @@ class AkkaLunchOrderSystem(
   private lazy val orders = actorSystem
     .actorOf(OrdersActor.props(idProvider, timeProvider))
   private lazy val addOrderItemHandler = actorSystem
-    .actorOf(AddOrderItemHandlerActor.props(orders))
+    .actorOf(AddOrderItemHandler.props(orders))
 
   readJournal
     .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
@@ -65,7 +65,7 @@ class AkkaLunchOrderSystem(
     .map(_.event)
     .runWith(scaladsl.Sink.actorRef(orders, PoisonPill))
 
-  private implicit val timeout: Timeout = 1 second
+  private implicit val timeout: Timeout = 2 second
 
   override def handle[Response](
     command: Command[Response]

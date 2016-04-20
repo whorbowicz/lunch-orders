@@ -33,7 +33,7 @@ class OrderAggregateActor(
   private val order = new OrderAggregate(
     orderId, idProvider, timeProvider, new EventPublisher {
       override def publish[E <: Event](event: E): CallbackHandler[E] =
-        (persist(event) _)
+        persist(event) _
     })
 
   override def receiveRecover: Receive = {

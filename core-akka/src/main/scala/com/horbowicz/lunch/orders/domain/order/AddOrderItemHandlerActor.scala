@@ -54,7 +54,9 @@ class AddOrderItemHandlerActor(orders: ActorRef)
   private implicit val timeout: Timeout = 1 second
 
   private def wrapper(orderId: Id, orderRef: ActorRef): Order = new Order {
-    override def addItem(command: AddOrderItem): CallbackHandler[\/[CommandError, Id]] =
+    override def addItem(
+      command: AddOrderItem
+    ): CallbackHandler[CommandError \/ Id] =
       (callback: Callback[CommandError \/ Id]) => {
         import context.dispatcher
         (orderRef ? command).mapTo[CommandError \/ Id]
@@ -62,6 +64,8 @@ class AddOrderItemHandlerActor(orders: ActorRef)
         orderCallbacks = orderCallbacks + (orderId -> callback)
       }
 
-    override def place(command: PlaceOrder): CallbackHandler[\/[CommandError, Unit]] = ???
+    override def place(
+      command: PlaceOrder
+    ): CallbackHandler[CommandError \/ Unit] = ???
   }
 }

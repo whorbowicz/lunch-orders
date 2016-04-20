@@ -9,7 +9,7 @@ import scalaz.Scalaz._
 class PlaceOrderHandler(orderRepository: OrderRepository)
   extends CommandHandler[PlaceOrder, Unit] {
 
-  def handle(command: PlaceOrder): Operation =
+  def handle(command: PlaceOrder): CallbackHandler[Response] =
     orderRepository.findById(command.orderId).flatMap(
       _.fold(
         notFound => notFound.left.point[CallbackHandler],

@@ -8,7 +8,6 @@ import scalaz.\/
 trait CommandHandler[C <: Command[R], R] {
 
   type Response = CommandError \/ R
-  type Operation = CallbackHandler[Response]
 
-  def handle(command: C): Operation
+  def handle(command: C): CallbackHandler[Response]
 }

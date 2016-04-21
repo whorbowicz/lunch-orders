@@ -7,7 +7,6 @@ import com.horbowicz.lunch.orders.command.order.AddOrderItem
 import com.horbowicz.lunch.orders.domain.order.OrdersActor.{FindOrder, OrderFound}
 import com.horbowicz.lunch.orders.domain.order.error.OrderNotFound
 
-import scala.concurrent.duration._
 import scala.language.postfixOps
 import scalaz.Scalaz._
 
@@ -31,7 +30,7 @@ class AddOrderItemHandlerSpec
 
   "Add order item handler" - {
     "returns Order not found error if order with given Id cannot be found" in {
-      within(1 second) {
+      within(defaultDuration) {
         handler ! addOrderItem
         ordersProbe.expectMsg(FindOrder(orderId))
         ordersProbe.reply((orderId, OrderNotFound))
@@ -43,7 +42,7 @@ class AddOrderItemHandlerSpec
       "and returns Order's response back" in {
       val expectedId = "12345"
 
-      within(1 second) {
+      within(defaultDuration) {
         handler ! addOrderItem
         ordersProbe.expectMsg(FindOrder(orderId))
         ordersProbe.reply(OrderFound(orderId, orderProbe.ref))

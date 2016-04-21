@@ -2,7 +2,10 @@ package com.horbowicz.lunch.orders
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest._
+
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class BaseActorSpec(actorSystem: ActorSystem)
   extends TestKit(actorSystem)
@@ -11,6 +14,9 @@ class BaseActorSpec(actorSystem: ActorSystem)
     with BeforeAndAfterAll {
 
   override def afterAll: Unit = {
-    TestKit.shutdownActorSystem(system)
+    try super.afterAll
+    finally TestKit.shutdownActorSystem(system)
   }
+
+  val defaultDuration = 500 millis
 }

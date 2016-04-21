@@ -41,12 +41,7 @@ class AkkaLunchOrderSystem(
   private lazy val openOrderHandler =
     actorSystem
       .actorOf(
-        OpenOrderHandlerActor
-          .props(
-            eventPublisher => new OpenOrderHandler(
-              idProvider,
-              timeProvider,
-              eventPublisher)),
+        OpenOrderHandler.props(idProvider, timeProvider),
         "open-order-handler")
   private lazy val ordersView = actorSystem
     .actorOf(OrdersViewActor.props(new OrdersView()))

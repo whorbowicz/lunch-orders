@@ -2,31 +2,39 @@ package com.horbowicz.lunch.orders.domain.order
 
 import java.time._
 
-import com.horbowicz.lunch.orders.BaseSpec
+import akka.actor.{ActorRef, ActorSystem}
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
-import com.horbowicz.lunch.orders.common.callback._
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order.error.ImpossibleDeliveryTime
-import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.OrderOpened
+import com.horbowicz.lunch.orders.{BaseActorSpec, EventsListener}
 
+import scala.language.postfixOps
 import scalaz.Scalaz._
 
-class OpenOrderHandlerSpec extends BaseSpec {
+class OpenOrderHandlerSpec
+  extends BaseActorSpec(ActorSystem("OpenOrderHandlerSpec"))
+    with EventsListener {
+
+  override def persistenceId: String = OpenOrderHandler.PersistenceId
 
   private val idProvider = mock[IdProvider]
   private val timeProvider = mock[TimeProvider]
-  private val eventPublisher = mock[EventPublisher]
-  private val handler = new OpenOrderHandler(
-    idProvider,
-    timeProvider,
-    eventPublisher)
-  private val sampleCommand = OpenOrder(
+
+  private val openOrder = OpenOrder(
     provider = "Food House",
     personResponsible = "WHO",
     orderingTime = LocalTime.of(10, 30),
     expectedDeliveryTime = LocalTime.of(12, 30))
+
+  private var handler: ActorRef = _
+
+  before {
+    handler = system
+      .actorOf(
+        OpenOrderHandler.props(idProvider, timeProvider))
+  }
 
   "Open order handler" - {
     "publishes OrderOpened event and returns Id of newly opened order" in {
@@ -34,36 +42,47 @@ class OpenOrderHandlerSpec extends BaseSpec {
       val currentDateTime = LocalDateTime.now()
       idProvider.get _ expects() returning expectedId
       timeProvider.getCurrentDateTime _ expects() returning currentDateTime
+
       val orderOpenedEvent = OrderOpened(
         expectedId,
         currentDateTime,
-        sampleCommand.provider,
-        sampleCommand.personResponsible,
-        sampleCommand.orderingTime,
-        sampleCommand.expectedDeliveryTime)
-      eventPublisher.publish[OrderOpened] _ expects orderOpenedEvent returning
-        orderOpenedEvent.point[CallbackHandler]
+        openOrder.provider,
+        openOrder.personResponsible,
+        openOrder.orderingTime,
+        openOrder.expectedDeliveryTime)
 
-      handler.handle(sampleCommand) {
-        response => response mustBe expectedId.right
+      within(defaultDuration) {
+        handler ! openOrder
+        expectMsg(expectedId.right)
+      }
+      eventsListener.within(defaultDuration) {
+        eventsListener.expectMsg(orderOpenedEvent)
       }
     }
 
     "returns error if expected delivery time is before ordering time" in {
-      val command = sampleCommand.copy(
-        expectedDeliveryTime = sampleCommand.orderingTime.minusHours(1))
+      val command = openOrder.copy(
+        expectedDeliveryTime = openOrder.orderingTime.minusHours(1))
 
-      handler.handle(command) {
-        response => response mustBe ImpossibleDeliveryTime.left
+      within(defaultDuration) {
+        handler ! command
+        expectMsg(ImpossibleDeliveryTime.left)
+      }
+      eventsListener.within(defaultDuration) {
+        eventsListener.expectNoMsg()
       }
     }
 
     "returns error if expected delivery time is same as ordering time" in {
-      val command = sampleCommand.copy(
-        expectedDeliveryTime = sampleCommand.orderingTime)
+      val command = openOrder.copy(
+        expectedDeliveryTime = openOrder.orderingTime)
 
-      handler.handle(command) {
-        response => response mustBe ImpossibleDeliveryTime.left
+      within(defaultDuration) {
+        handler ! command
+        expectMsg(ImpossibleDeliveryTime.left)
+      }
+      eventsListener.within(defaultDuration) {
+        eventsListener.expectNoMsg()
       }
     }
   }

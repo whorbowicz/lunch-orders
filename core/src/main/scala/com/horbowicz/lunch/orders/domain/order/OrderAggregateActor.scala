@@ -3,7 +3,7 @@ package com.horbowicz.lunch.orders.domain.order
 import akka.actor.{ActorLogging, Props}
 import akka.persistence.PersistentActor
 import com.horbowicz.lunch.orders.Global
-import com.horbowicz.lunch.orders.command.order.AddOrderItem
+import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.common.callback.CallbackHandler
 import com.horbowicz.lunch.orders.domain.IdProvider
@@ -45,6 +45,10 @@ class OrderAggregateActor(
       log.info(s"Received $addOrderItem")
       val currentSender = sender()
       order.addItem(addOrderItem) { response => currentSender ! response }
+    case placeOrder: PlaceOrder =>
+      log.info(s"Received $placeOrder")
+      val currentSender = sender()
+      order.place(placeOrder) { response => currentSender ! response }
   }
 
 }

@@ -9,7 +9,7 @@ import scalaz._
 
 trait OrderRepository {
 
-  type Response = OrderNotFound.type \/ Order
+  type Response = OrderNotFound \/ Order
 
   def findById(id: Id): CallbackHandler[Response]
 }

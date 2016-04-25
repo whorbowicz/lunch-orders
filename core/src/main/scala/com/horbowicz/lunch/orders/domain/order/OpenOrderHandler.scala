@@ -1,13 +1,15 @@
 package com.horbowicz.lunch.orders.domain.order
 
-import akka.actor.{ActorLogging, Props}
+import akka.actor.{ActorLogging, ActorRef, Props}
 import akka.persistence.PersistentActor
+import com.horbowicz.lunch.orders.Global
 import com.horbowicz.lunch.orders.Global.Id
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order.OpenOrderHandler._
-import com.horbowicz.lunch.orders.domain.order.error.ImpossibleDeliveryTime
+import com.horbowicz.lunch.orders.domain.order.OrdersActor.{FindOrder, OrderFound}
+import com.horbowicz.lunch.orders.domain.order.error.{ImpossibleDeliveryTime, OrderNotFound}
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 
 import scalaz.Scalaz._
@@ -31,17 +33,23 @@ class OpenOrderHandler(
 
   override def persistenceId: String = PersistenceId
 
-  override def receiveRecover: Receive = {
-    case x => log.info(s"Received recover $x")
-  }
+  private var orders = Map.empty[Global.Id, ActorRef]
 
   override def receiveCommand: Receive = {
     case openOrder: OpenOrder =>
       if (openOrder.expectedDeliveryTime.isAfter(openOrder.orderingTime))
         persist(createEvent(idProvider.get(), openOrder)) {
-          event => sender() ! event.id.right
+          event =>
+            applyEvent(event)
+            sender() ! event.id.right
         }
       else sender() ! ImpossibleDeliveryTime.left
+    case FindOrder(orderId) =>
+      val searchResult = orders
+        .get(orderId)
+        .map(orderRef => OrderFound(orderId, orderRef))
+        .toRightDisjunction(OrderNotFound(orderId))
+      sender ! searchResult
   }
 
   private def createEvent(id: Id, command: OpenOrder) =
@@ -53,4 +61,15 @@ class OpenOrderHandler(
       command.orderingTime,
       command.expectedDeliveryTime)
 
+  private def applyEvent(event: OrderOpened) =
+    orders = orders + (event.id -> createAggregate(event.id))
+
+  private def createAggregate(id: Global.Id): ActorRef =
+    context
+      .actorOf(OrderAggregate.props(id, idProvider, timeProvider), s"order-$id")
+
+  override def receiveRecover: Receive = {
+    case orderOpened: OrderOpened => applyEvent(orderOpened)
+    case x => log.info(s"Received recover $x")
+  }
 }

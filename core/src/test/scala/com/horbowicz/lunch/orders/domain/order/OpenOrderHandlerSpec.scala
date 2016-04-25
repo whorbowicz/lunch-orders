@@ -6,12 +6,14 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.horbowicz.lunch.orders.command.order.OpenOrder
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
-import com.horbowicz.lunch.orders.domain.order.error.ImpossibleDeliveryTime
+import com.horbowicz.lunch.orders.domain.order.OrdersActor.{FindOrder, OrderFound}
+import com.horbowicz.lunch.orders.domain.order.error.{ImpossibleDeliveryTime, OrderNotFound}
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 import com.horbowicz.lunch.orders.{BaseActorSpec, EventsListener}
 
 import scala.language.postfixOps
 import scalaz.Scalaz._
+import scalaz._
 
 class OpenOrderHandlerSpec
   extends BaseActorSpec(ActorSystem("OpenOrderHandlerSpec"))
@@ -83,6 +85,44 @@ class OpenOrderHandlerSpec
       }
       eventsListener.within(defaultDuration) {
         eventsListener.expectNoMsg()
+      }
+    }
+
+    "returns order not found if requested order does not exist" in {
+      within(defaultDuration) {
+        val orderId = "12345"
+        handler ! FindOrder(orderId)
+        expectMsg(OrderNotFound(orderId).left)
+      }
+      eventsListener.within(defaultDuration) {
+        eventsListener.expectNoMsg()
+      }
+    }
+
+    "returns order if requested order exists" in {
+      val expectedId: String = "12345"
+      val currentDateTime = LocalDateTime.now()
+      idProvider.get _ expects() returning expectedId
+      timeProvider.getCurrentDateTime _ expects() returning currentDateTime
+
+      val orderOpenedEvent = OrderOpened(
+        expectedId,
+        currentDateTime,
+        openOrder.provider,
+        openOrder.personResponsible,
+        openOrder.orderingTime,
+        openOrder.expectedDeliveryTime)
+
+      within(defaultDuration) {
+        handler ! openOrder
+        expectMsg(expectedId.right)
+        handler ! FindOrder(expectedId)
+        val \/-(OrderFound(orderId, _)) = expectMsgType[OrderNotFound \/
+          OrderFound]
+        orderId mustBe expectedId
+      }
+      eventsListener.within(defaultDuration) {
+        eventsListener.expectMsg(orderOpenedEvent)
       }
     }
   }

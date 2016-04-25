@@ -32,10 +32,11 @@ class OrdersActor(idProvider: IdProvider, timeProvider: TimeProvider)
       val searchResult = orders
         .get(orderId)
         .map(orderRef => OrderFound(orderId, orderRef))
-        .getOrElse((orderId, OrderNotFound))
+        .getOrElse(OrderNotFound(orderId))
       sender ! searchResult
   }
 
   private def createAggregate(id: Global.Id): ActorRef =
-    context.actorOf(OrderAggregate.props(id, idProvider, timeProvider))
+    context
+      .actorOf(OrderAggregate.props(id, idProvider, timeProvider), s"order-$id")
 }

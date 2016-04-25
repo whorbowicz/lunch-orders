@@ -20,10 +20,10 @@ class PlaceOrderHandlerSpec extends BaseSpec {
   "Place order handler" - {
     "returns Order not found error if order with given Id cannot be found" in {
       orderRepository.findById _ expects orderId returning
-        OrderNotFound.left.point[CallbackHandler]
+        OrderNotFound(orderId).left.point[CallbackHandler]
 
       handler.handle(sampleCommand) {
-        response => response mustBe OrderNotFound.left
+        response => response mustBe OrderNotFound(orderId).left
       }
     }
 

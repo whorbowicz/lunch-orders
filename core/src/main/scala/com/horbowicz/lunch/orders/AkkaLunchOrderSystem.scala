@@ -49,7 +49,7 @@ class AkkaLunchOrderSystem(
   private lazy val orders = actorSystem
     .actorOf(OrdersActor.props(idProvider, timeProvider))
   private lazy val addOrderItemHandler = actorSystem
-    .actorOf(AddOrderItemHandler.props(orders))
+    .actorOf(AddOrderItemHandler.props(idProvider, timeProvider))
 
   readJournal
     .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
@@ -59,6 +59,10 @@ class AkkaLunchOrderSystem(
     .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
     .map(_.event)
     .runWith(scaladsl.Sink.actorRef(orders, PoisonPill))
+  readJournal
+    .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
+    .map(_.event)
+    .runWith(scaladsl.Sink.actorRef(addOrderItemHandler, PoisonPill))
 
   private implicit val timeout: Timeout = 2 second
 

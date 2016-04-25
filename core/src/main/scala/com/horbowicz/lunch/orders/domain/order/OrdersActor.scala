@@ -37,5 +37,5 @@ class OrdersActor(idProvider: IdProvider, timeProvider: TimeProvider)
   }
 
   private def createAggregate(id: Global.Id): ActorRef =
-    context.actorOf(OrderAggregateActor.props(id, idProvider, timeProvider))
+    context.actorOf(OrderAggregate.props(id, idProvider, timeProvider))
 }

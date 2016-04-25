@@ -18,5 +18,5 @@ class BaseActorSpec(actorSystem: ActorSystem)
     finally TestKit.shutdownActorSystem(system)
   }
 
-  val defaultDuration = 500 millis
+  val defaultDuration = 1 second
 }

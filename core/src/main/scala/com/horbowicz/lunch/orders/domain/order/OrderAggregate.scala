@@ -1,71 +1,82 @@
 package com.horbowicz.lunch.orders.domain.order
 
+import akka.actor.{ActorLogging, Props}
+import akka.persistence.PersistentActor
+import com.horbowicz.lunch.orders.Global
 import com.horbowicz.lunch.orders.Global.Id
-import com.horbowicz.lunch.orders.command.error.CommandError
 import com.horbowicz.lunch.orders.command.order.{AddOrderItem, PlaceOrder}
 import com.horbowicz.lunch.orders.common.TimeProvider
-import com.horbowicz.lunch.orders.common.callback._
+import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order.error.{InvalidOrderId, UnfilledOrder}
-import com.horbowicz.lunch.orders.domain.{IdProvider, Order}
-import com.horbowicz.lunch.orders.event.EventPublisher
 import com.horbowicz.lunch.orders.event.order.{OrderItemAdded, OrderPlaced}
 
 import scalaz.Scalaz._
-import scalaz._
+
+object OrderAggregate {
+
+  def props(
+    orderId: Global.Id,
+    idProvider: IdProvider,
+    timeProvider: TimeProvider
+  ) = Props(
+    classOf[OrderAggregate],
+    orderId,
+    idProvider,
+    timeProvider)
+}
 
 class OrderAggregate(
-  id: Id,
+  orderId: Global.Id,
   idProvider: IdProvider,
-  timeProvider: TimeProvider,
-  eventPublisher: EventPublisher)
-  extends Order {
+  timeProvider: TimeProvider)
+  extends PersistentActor with ActorLogging {
+
+  override val persistenceId: String = s"order-$orderId"
 
   private var items = Seq.empty[Id]
 
-  override def addItem(
-    command: AddOrderItem
-  ): CallbackHandler[CommandError \/ Id] =
-    if (id != command.orderId) InvalidOrderId.left.point[CallbackHandler]
-    else add(command)
+  override def receiveRecover: Receive = {
+    case x => log.info(s"Received recover $x")
+  }
 
-  private def add(
-    command: AddOrderItem
-  ): Callback[CommandError \/ Id] => Unit =
-    callback =>
-      eventPublisher.publish(createEvent(idProvider.get(), command)) {
+  override def receiveCommand: Receive = {
+    case addOrderItem: AddOrderItem =>
+      log.info(s"Received $addOrderItem")
+      val currentSender = sender()
+      if (orderId != addOrderItem.orderId) currentSender ! InvalidOrderId.left
+      else persist(orderItemAdded(idProvider.get(), addOrderItem)) {
         event =>
           applyEvent(event)
-          callback(event.id.right)
+          currentSender ! event.id.right
       }
+    case placeOrder: PlaceOrder =>
+      log.info(s"Received $placeOrder")
+      val currentSender = sender()
+      if (orderId != placeOrder.orderId) currentSender ! InvalidOrderId.left
+      else if (items.isEmpty) currentSender ! UnfilledOrder.left
+      else persist(orderPlaced(placeOrder)) {
+        _ => currentSender ! ().right
+      }
+  }
 
-  private def createEvent(id: Id, command: AddOrderItem) =
+  private def orderItemAdded(itemId: Id, command: AddOrderItem) =
     OrderItemAdded(
-      id,
+      itemId,
       timeProvider.getCurrentDateTime,
       command.orderId,
       command.orderingPerson,
       command.description,
       command.price)
 
-  override def place(
-    command: PlaceOrder
-  ): CallbackHandler[CommandError \/ Unit] =
-    if (id != command.orderId) InvalidOrderId.left.point[CallbackHandler]
-    else if (items.isEmpty) UnfilledOrder.left.point[CallbackHandler]
-    else placeOrder(command)
+  private def orderPlaced(command: PlaceOrder): OrderPlaced =
+    OrderPlaced(
+      orderId,
+      timeProvider.getCurrentDateTime,
+      command.personResponsible)
 
-  private def placeOrder(
-    command: PlaceOrder
-  ): Callback[CommandError \/ Unit] => Unit =
-    callback =>
-      eventPublisher.publish(createEvent(command)) {
-        _ => callback(().right)
-      }
-
-  private def createEvent(command: PlaceOrder): OrderPlaced =
-    OrderPlaced(id, timeProvider.getCurrentDateTime, command.personResponsible)
-
-  def applyEvent(event: OrderItemAdded) = event match {
-    case OrderItemAdded(itemId, _, this.id, _, _, _) => items = items :+ itemId
+  private def applyEvent(event: OrderItemAdded) = event match {
+    case OrderItemAdded(itemId, _, oId, _, _, _) if oId ==
+      this.orderId => items = items :+ itemId
   }
 }
+

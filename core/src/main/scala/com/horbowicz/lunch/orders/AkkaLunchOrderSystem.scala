@@ -11,7 +11,7 @@ import akka.util.Timeout
 import com.horbowicz.lunch.orders.Global.Id
 import com.horbowicz.lunch.orders.command.Command
 import com.horbowicz.lunch.orders.command.error.CommandError
-import com.horbowicz.lunch.orders.command.order.{AddOrderItem, OpenOrder}
+import com.horbowicz.lunch.orders.command.order._
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order._
@@ -38,31 +38,18 @@ class AkkaLunchOrderSystem(
 
   implicit val mat = ActorMaterializer()(actorSystem)
 
-  private lazy val openOrderHandler =
+  private lazy val orders =
     actorSystem
       .actorOf(
-        OpenOrderHandler.props(idProvider, timeProvider),
+        Orders.props(idProvider, timeProvider),
         "open-order-handler")
   private lazy val ordersView = actorSystem
     .actorOf(OrdersViewActor.props(new OrdersView()))
-
-  private lazy val orders = actorSystem
-    .actorOf(OrdersActor.props(idProvider, timeProvider))
-  private lazy val addOrderItemHandler = actorSystem
-    .actorOf(AddOrderItemHandler.props(idProvider, timeProvider))
 
   readJournal
     .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
     .map(_.event)
     .runWith(scaladsl.Sink.actorRef(ordersView, PoisonPill))
-  readJournal
-    .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
-    .map(_.event)
-    .runWith(scaladsl.Sink.actorRef(orders, PoisonPill))
-  readJournal
-    .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
-    .map(_.event)
-    .runWith(scaladsl.Sink.actorRef(addOrderItemHandler, PoisonPill))
 
   private implicit val timeout: Timeout = 2 second
 
@@ -71,9 +58,9 @@ class AkkaLunchOrderSystem(
   ): Future[CommandError \/ Response] = {
     command match {
       case openOrder: OpenOrder =>
-        (openOrderHandler ? openOrder).mapTo[CommandError \/ Response]
-      case addOrderItem: AddOrderItem => (addOrderItemHandler ? addOrderItem)
-        .mapTo[CommandError \/ Response]
+        (orders ? openOrder).mapTo[CommandError \/ Response]
+      case command: OrderCommand[Response] =>
+        (orders ? command).mapTo[CommandError \/ Response]
       case _ => Future.successful(new CommandError {}.left)
     }
   }

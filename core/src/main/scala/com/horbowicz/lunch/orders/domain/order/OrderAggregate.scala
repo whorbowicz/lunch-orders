@@ -75,8 +75,8 @@ class OrderAggregate(
       command.personResponsible)
 
   private def applyEvent(event: OrderItemAdded) = event match {
-    case OrderItemAdded(itemId, _, oId, _, _, _) if oId ==
-      this.orderId => items = items :+ itemId
+    case OrderItemAdded(itemId, _, oId, _, _, _) if oId == this.orderId =>
+      items = items :+ itemId
   }
 }
 

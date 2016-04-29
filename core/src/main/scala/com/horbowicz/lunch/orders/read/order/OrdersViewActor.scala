@@ -4,6 +4,8 @@ import akka.actor.{Actor, ActorLogging, Props}
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 import com.horbowicz.lunch.orders.query.order.GetActiveOrders
 
+import scalaz.\/-
+
 object OrdersViewActor {
 
   def props(handler: OrdersView) = Props(classOf[OrdersViewActor], handler)
@@ -17,6 +19,6 @@ class OrdersViewActor(handler: OrdersView) extends Actor with ActorLogging {
       handler.applyEvent(event)
     case query: GetActiveOrders.type =>
       log.info(s"query $query")
-      sender ! handler.handle(query)
+      sender ! \/-(handler.handle(query))
   }
 }

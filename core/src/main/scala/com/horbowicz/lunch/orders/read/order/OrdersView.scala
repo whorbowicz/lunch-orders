@@ -21,7 +21,7 @@ class OrdersView {
   private var orders = Seq.empty[OrdersView.Order]
 
   def applyEvent(event: OrderOpened): Unit = {
-    orders = orders :+ Order(event.id, "Opened", event.personResponsible)
+    orders = orders :+ Order(event.id, "Open", event.personResponsible)
   }
 
   def handle(query: GetActiveOrders.type): Seq[OrdersView.Order] = orders

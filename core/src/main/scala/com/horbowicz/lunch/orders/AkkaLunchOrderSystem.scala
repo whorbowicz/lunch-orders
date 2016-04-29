@@ -15,8 +15,9 @@ import com.horbowicz.lunch.orders.command.order._
 import com.horbowicz.lunch.orders.common.TimeProvider
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order._
-import com.horbowicz.lunch.orders.query.order.GetActiveOrders
-import com.horbowicz.lunch.orders.read.order.{OrdersView, OrdersViewActor}
+import com.horbowicz.lunch.orders.query.Query
+import com.horbowicz.lunch.orders.query.order.{GetActiveOrders, GetOrderDetails}
+import com.horbowicz.lunch.orders.read.order._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -45,6 +46,7 @@ class AkkaLunchOrderSystem(
         "open-order-handler")
   private lazy val ordersView = actorSystem
     .actorOf(OrdersViewActor.props(new OrdersView()))
+  private lazy val orderDetails = actorSystem.actorOf(OrderDetails.props)
 
   readJournal
     .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
@@ -60,12 +62,20 @@ class AkkaLunchOrderSystem(
       case openOrder: OpenOrder =>
         (orders ? openOrder).mapTo[CommandError \/ Response]
       case command: OrderCommand[Response] =>
-        (orders ? command).mapTo[CommandError \/ Response]
+        (orders ? command).mapTo[CommandError \/
+          Response] //TODO these casts are wrong
       case _ => Future.successful(new CommandError {}.left)
     }
   }
 
-  override def handle[Response](query: GetActiveOrders.type): Future[Seq[OrdersView.Order]] = {
-    (ordersView ? query).mapTo[Seq[OrdersView.Order]]
+  override def handle[Response](query: Query[Response]): Future[Exception \/
+    Response] = {
+    query match {
+      case GetActiveOrders =>
+        (ordersView ? query).mapTo[Exception \/ Response]
+      case getOrderDetails: GetOrderDetails =>
+        (orderDetails ? getOrderDetails).mapTo[Exception \/
+          Response] //TODO these casts are wrong
+    }
   }
 }

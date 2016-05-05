@@ -2,13 +2,17 @@ package com.horbowicz.lunch.orders.read.order
 
 import java.time.{LocalDateTime, LocalTime}
 
-import com.horbowicz.lunch.orders.BaseSpec
+import akka.actor.{ActorRef, ActorSystem}
+import com.horbowicz.lunch.orders.BaseActorSpec
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 import com.horbowicz.lunch.orders.query.order.GetActiveOrders
 
-class OrdersViewSpec extends BaseSpec {
+import scalaz.Scalaz._
 
-  private val handler = new OrdersView()
+
+class OrdersViewSpec extends BaseActorSpec(ActorSystem("OrdersViewSpec")) {
+
+  private var ordersView: ActorRef = _
   private val foodHouseOrderOpened =
     OrderOpened(
       id = "123",
@@ -26,26 +30,35 @@ class OrdersViewSpec extends BaseSpec {
       orderingTime = LocalTime.of(11, 0),
       expectedDeliveryTime = LocalTime.of(13, 30))
 
+
+  before {
+    ordersView = system.actorOf(OrdersView.props)
+  }
+
   "Orders view" - {
     "returns empty sequence of active orders if no orders were added" in {
-      handler.handle(GetActiveOrders) mustBe Seq.empty[OrdersView.Order]
+      ordersView ! GetActiveOrders
+      expectMsg(Seq.empty[OrdersView.Order].right)
     }
 
     "returns sequence of active orders that were previously added" in {
-      handler.applyEvent(foodHouseOrderOpened)
-      handler.applyEvent(leVanOrderOpened)
+      ordersView ! foodHouseOrderOpened
+      ordersView ! leVanOrderOpened
 
-      handler.handle(GetActiveOrders) mustBe Seq(
-        OrdersView.Order(
-          id = foodHouseOrderOpened.id,
-          state = "Opened",
-          orderingPerson = foodHouseOrderOpened.personResponsible
-        ),
-        OrdersView.Order(
-          id = leVanOrderOpened.id,
-          state = "Opened",
-          orderingPerson = leVanOrderOpened.personResponsible
-        )
+      ordersView ! GetActiveOrders
+      expectMsg(
+        Seq(
+          OrdersView.Order(
+            id = foodHouseOrderOpened.id,
+            state = "Open",
+            orderingPerson = foodHouseOrderOpened.personResponsible
+          ),
+          OrdersView.Order(
+            id = leVanOrderOpened.id,
+            state = "Open",
+            orderingPerson = leVanOrderOpened.personResponsible
+          )
+        ).right
       )
     }
   }

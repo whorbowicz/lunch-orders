@@ -8,7 +8,7 @@ import akka.persistence.query.PersistenceQuery
 import com.horbowicz.lunch.orders._
 import com.horbowicz.lunch.orders.command.order.{AddOrderItem, OpenOrder}
 import com.horbowicz.lunch.orders.query.order.{GetActiveOrders, GetOrderDetails}
-import com.horbowicz.lunch.orders.read.order.{OrderDetails, OrdersView}
+import com.horbowicz.lunch.orders.read.order._
 import com.horbowicz.lunch.orders.validation.ValidationTest
 import org.scalatest.BeforeAndAfter
 

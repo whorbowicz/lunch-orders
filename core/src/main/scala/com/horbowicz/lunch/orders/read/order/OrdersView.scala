@@ -1,10 +1,12 @@
 package com.horbowicz.lunch.orders.read.order
 
-import com.horbowicz.lunch.orders.Global.Id
+import akka.actor.{Actor, ActorLogging, Props}
+import com.horbowicz.lunch.orders.Global._
 import com.horbowicz.lunch.orders.event.order.OrderOpened
 import com.horbowicz.lunch.orders.query.order.GetActiveOrders
-import com.horbowicz.lunch.orders.read.order.OrdersView.Order
+import com.horbowicz.lunch.orders.read.order.OrdersView._
 
+import scalaz.\/-
 
 object OrdersView {
 
@@ -14,15 +16,17 @@ object OrdersView {
     orderingPerson: String
   )
 
+  def props = Props(classOf[OrdersView])
 }
 
-class OrdersView {
+class OrdersView extends Actor with ActorLogging {
 
-  private var orders = Seq.empty[OrdersView.Order]
+  private var orders = Seq.empty[Order]
 
-  def applyEvent(event: OrderOpened): Unit = {
-    orders = orders :+ Order(event.id, "Open", event.personResponsible)
+  def receive: Receive = {
+    case event: OrderOpened =>
+      orders = orders :+ Order(event.id, "Open", event.personResponsible)
+    case query: GetActiveOrders.type =>
+      sender ! \/-(orders)
   }
-
-  def handle(query: GetActiveOrders.type): Seq[OrdersView.Order] = orders
 }

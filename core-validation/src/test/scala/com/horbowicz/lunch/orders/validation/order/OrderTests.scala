@@ -58,7 +58,7 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
       listOrders must be('empty)
       val \/-(orderId) = openOrder as "WHO" from "Food House" orderedAt
         LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
-
+      //TODO sometime it fails - eventual consistency?
       listOrders mustBe Seq(OrdersView.Order(orderId, "Open", "WHO"))
     }
 
@@ -76,26 +76,29 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
     "access order details along with list of it's items" in {
       val \/-(orderId) = openOrder as "WHO" from "Food House" orderedAt
         LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
-      addOrderItem as "HBO" toOrder orderId withDescription
+      val \/-(hboItemId) = addOrderItem as "HBO" toOrder orderId withDescription
         "Meat dumplings, salad" `for` "15.50"
-      addOrderItem as "MAT" toOrder orderId withDescription
+      val \/-(matItemId) = addOrderItem as "MAT" toOrder orderId withDescription
         "Spahetti bolognese" `for` "12.00"
 
-      orderDetails of orderId mustBe OrderDetails.Order(
+      Thread.sleep(1000) //TODO testing with eventual consistency
+      orderDetails of orderId mustBe OrdersDetails.Order(
         id = orderId,
         provider = "Food House",
         personResponsible = "WHO",
         orderingTime = LocalTime.of(10, 30),
-        status = OrderDetails.Order.Status.Open,
+        status = OrdersDetails.Order.Status.Open,
         expectedDeliveryTime = LocalTime.of(12, 0),
         totalPrice = BigDecimal("27.50"),
         items = Seq(
-          OrderDetails.OrderItem(
+          OrdersDetails.OrderItem(
+            id = hboItemId,
             orderingPerson = "HBO",
             description = "Meat dumplings, salad",
             price = BigDecimal("15.50")
           ),
-          OrderDetails.OrderItem(
+          OrdersDetails.OrderItem(
+            id = matItemId,
             orderingPerson = "MAT",
             description = "Spahetti bolognese",
             price = BigDecimal("12.00")
@@ -154,21 +157,11 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
 
   object orderDetails {
 
-    def of(orderId: Global.Id): OrderDetails.Order = {
+    def of(orderId: Global.Id): OrdersDetails.Order = {
       Await.result(
         system.handle(GetOrderDetails(orderId)),
         10 seconds).toOption.get
     }
   }
 
-  //
-  //"""
-  //order lunch:
-  //1 announce with closing date
-  //2 gather orders (items)
-  //3 lock
-  //4 verify/amend values
-  //5 place
-  //
-  //"""
 }

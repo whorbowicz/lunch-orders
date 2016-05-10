@@ -70,6 +70,6 @@ class Orders(
 
   override def receiveRecover: Receive = {
     case orderOpened: OrderOpened => applyEvent(orderOpened)
-    case x => log.info(s"Received recover $x")
+    case x => log.debug(s"Received recover $x")
   }
 }

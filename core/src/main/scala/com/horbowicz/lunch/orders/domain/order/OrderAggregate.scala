@@ -23,6 +23,8 @@ object OrderAggregate {
     orderId,
     idProvider,
     timeProvider)
+
+  def persistenceId(orderId: Id): String = s"order-$orderId"
 }
 
 class OrderAggregate(
@@ -31,17 +33,17 @@ class OrderAggregate(
   timeProvider: TimeProvider)
   extends PersistentActor with ActorLogging {
 
-  override val persistenceId: String = s"order-$orderId"
+  override val persistenceId: String = OrderAggregate.persistenceId(orderId)
 
   private var items = Seq.empty[Id]
 
   override def receiveRecover: Receive = {
-    case x => log.info(s"Received recover $x")
+    case x => log.debug(s"Received recover $x")
   }
 
   override def receiveCommand: Receive = {
     case addOrderItem: AddOrderItem =>
-      log.info(s"Received $addOrderItem")
+      log.debug(s"Received $addOrderItem")
       val currentSender = sender()
       if (orderId != addOrderItem.orderId) currentSender ! InvalidOrderId.left
       else persist(orderItemAdded(idProvider.get(), addOrderItem)) {
@@ -50,7 +52,7 @@ class OrderAggregate(
           currentSender ! event.id.right
       }
     case placeOrder: PlaceOrder =>
-      log.info(s"Received $placeOrder")
+      log.debug(s"Received $placeOrder")
       val currentSender = sender()
       if (orderId != placeOrder.orderId) currentSender ! InvalidOrderId.left
       else if (items.isEmpty) currentSender ! UnfilledOrder.left

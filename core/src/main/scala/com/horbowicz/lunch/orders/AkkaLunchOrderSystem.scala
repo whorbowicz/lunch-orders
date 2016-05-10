@@ -45,12 +45,26 @@ class AkkaLunchOrderSystem(
         Orders.props(idProvider, timeProvider),
         "open-order-handler")
   private lazy val ordersView = actorSystem.actorOf(OrdersView.props)
-  private lazy val orderDetails = actorSystem.actorOf(OrderDetails.props)
+  private lazy val ordersDetails = actorSystem.actorOf(
+    OrdersDetails.props(
+      (orderId, actor) =>
+        readJournal
+          .eventsByPersistenceId(
+            OrderAggregate.persistenceId(orderId),
+            0L,
+            Long.MaxValue)
+          .map(_.event)
+          .runWith(scaladsl.Sink.actorRef(actor, PoisonPill))))
 
   readJournal
     .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
     .map(_.event)
     .runWith(scaladsl.Sink.actorRef(ordersView, PoisonPill))
+
+  readJournal
+    .eventsByPersistenceId("open-order-handler", 0L, Long.MaxValue)
+    .map(_.event)
+    .runWith(scaladsl.Sink.actorRef(ordersDetails, PoisonPill))
 
   private implicit val timeout: Timeout = 2 second
 
@@ -73,7 +87,7 @@ class AkkaLunchOrderSystem(
       case GetActiveOrders =>
         (ordersView ? query).mapTo[Exception \/ Response]
       case getOrderDetails: GetOrderDetails =>
-        (orderDetails ? getOrderDetails).mapTo[Exception \/
+        (ordersDetails ? getOrderDetails).mapTo[Exception \/
           Response] //TODO these casts are wrong
     }
   }

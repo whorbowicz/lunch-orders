@@ -88,10 +88,9 @@ class OrdersDetails(registerForOrderEvents: (Id, ActorRef) => Unit)
       orders = orders + (event.id -> Order.fromEvent(event))
       createDetails(event.id)
     case event: OrderItemAdded =>
-      println(s"bar $event")
-      val updatedOrder = orders.get(event.orderId)
-        .map(_.addItem(OrderItem.fromEvent(event)))
-      orders = orders.updated(event.orderId, updatedOrder.get)
+      orders = orders.updated(
+        event.orderId,
+        orders(event.orderId).addItem(OrderItem.fromEvent(event)))
     case GetOrderDetails(orderId) => sender !
       orders.get(orderId).toRightDisjunction(OrderNotFound(orderId))
   }
@@ -111,8 +110,6 @@ object OrderDetails {
 class OrderDetails(orderId: Id) extends Actor {
 
   override def receive: Receive = {
-    case event: Event =>
-      println(s"foooo $event")
-      context.parent forward event
+    case event: Event => context.parent forward event
   }
 }

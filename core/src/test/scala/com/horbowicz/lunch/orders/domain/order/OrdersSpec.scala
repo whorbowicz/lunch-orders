@@ -104,9 +104,8 @@ class OrdersSpec
       "returns order not found if order with given id does not exist" in {
         within(defaultDuration) {
           val expectedId = "12345"
-          orders ! new OrderCommand[Any] {
-            override def orderId = expectedId
-          }
+          orders ! MockCommand(expectedId)
+
           expectMsg(OrderNotFound(expectedId).left)
         }
         eventsListener.within(defaultDuration) {
@@ -128,9 +127,7 @@ class OrdersSpec
           openOrder.orderingTime,
           openOrder.expectedDeliveryTime)
 
-        val command = new OrderCommand[Any] {
-          override def orderId = expectedId
-        }
+        val command = MockCommand(expectedId)
 
         within(defaultDuration) {
           orders ! openOrder
@@ -146,3 +143,5 @@ class OrdersSpec
     }
   }
 }
+
+case class MockCommand(orderId: Id) extends OrderCommand[Any]

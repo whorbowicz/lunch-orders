@@ -17,6 +17,8 @@ object Dependencies {
   val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test
   val akkaPersistenceInMemory = "com.github.dnvriend" %%
     "akka-persistence-inmemory" % "1.2.12" % Test
+  val kryoSerialization = "com.github.romix.akka" %% "akka-kryo-serialization" %
+    "0.4.1"
 
   val levelDb = "org.iq80.leveldb" % "leveldb" % "0.7"
   val levelDbJni = "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
@@ -33,7 +35,8 @@ object Dependencies {
     akkaActor,
     akkaPersistence,
     akkaClusterSharding,
-    akkaPersistenceExperimental
+    akkaPersistenceExperimental,
+    kryoSerialization
   )
 
   val akkaTest = Seq(

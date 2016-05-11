@@ -125,7 +125,7 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
                   user,
                   orderingTime,
                   expectedDeliveryTime)),
-              2 second)
+              3 second)
         }
       }
     }

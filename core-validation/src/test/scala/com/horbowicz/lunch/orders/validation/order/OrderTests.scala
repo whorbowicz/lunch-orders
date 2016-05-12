@@ -15,7 +15,7 @@ import org.scalatest.BeforeAndAfter
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.language.postfixOps
+import scala.language.{postfixOps, reflectiveCalls}
 import scalaz._
 
 class OrderTests extends ValidationTest with BeforeAndAfter {
@@ -40,25 +40,25 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
       operationResult must be('right)
     }
 
-    "open new order with a future order and delivery dates" ignore()
+    "open new order with a future order and delivery dates" ignore {}
 
-    "open new order with order date different that delivery date" ignore()
+    "open new order with order date different that delivery date" ignore {}
 
-    "update details of the order that I have opened" ignore()
+    "update details of the order that I have opened" ignore {}
 
-    "lock order that that I have opened" ignore()
+    "lock order that that I have opened" ignore {}
 
-    "unlock (re-open) order that that I have locked" ignore()
+    "unlock (re-open) order that that I have locked" ignore {}
 
-    "mark the order that that I have opened as ordered" ignore()
+    "mark the order that that I have opened as ordered" ignore {}
 
-    "update expected delivery time when marking the order as ordered" ignore()
+    "update expected delivery time when marking the order as ordered" ignore {}
 
     "list all active (open, locked, ordered) orders" in {
       listOrders must be('empty)
       val \/-(orderId) = openOrder as "WHO" from "Food House" orderedAt
         LocalTime.of(10, 30) expectingDeliveryAt LocalTime.of(12, 0)
-      //TODO sometime it fails - eventual consistency?
+      Thread.sleep(1000) //TODO sometime it fails - eventual consistency?
       listOrders mustBe Seq(OrdersView.Order(orderId, "Open", "WHO"))
     }
 
@@ -107,9 +107,9 @@ class OrderTests extends ValidationTest with BeforeAndAfter {
       )
     }
 
-    "edit order item that I have added while the order is opened" ignore()
+    "edit order item that I have added while the order is opened" ignore {}
 
-    "update any item in order I have opened" ignore()
+    "update any item in order I have opened" ignore {}
   }
 
   object openOrder {

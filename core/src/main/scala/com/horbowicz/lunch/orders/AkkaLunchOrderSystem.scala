@@ -10,9 +10,9 @@ import akka.stream.{ActorMaterializer, scaladsl}
 import akka.util.Timeout
 import com.horbowicz.lunch.orders.Global.Id
 import com.horbowicz.lunch.orders.command.Command
-import com.horbowicz.lunch.orders.command.error.CommandError
 import com.horbowicz.lunch.orders.command.order._
 import com.horbowicz.lunch.orders.common.TimeProvider
+import com.horbowicz.lunch.orders.common.error.BusinessError
 import com.horbowicz.lunch.orders.domain.IdProvider
 import com.horbowicz.lunch.orders.domain.order._
 import com.horbowicz.lunch.orders.query.Query
@@ -68,27 +68,26 @@ class AkkaLunchOrderSystem(
 
   private implicit val timeout: Timeout = 2 second
 
+  //TODO check implicit TypeTag / Manifest
   override def handle[Response](
     command: Command[Response]
-  ): Future[CommandError \/ Response] = {
+  ): Future[BusinessError \/ Response] = {
     command match {
       case openOrder: OpenOrder =>
-        (orders ? openOrder).mapTo[CommandError \/ Response]
+        (orders ? openOrder).mapTo[BusinessError \/ Response]
       case command: OrderCommand[Response] =>
-        (orders ? command).mapTo[CommandError \/
-          Response] //TODO these casts are wrong
-      case _ => Future.successful(new CommandError {}.left)
+        (orders ? command).mapTo[BusinessError \/ Response]
+      case _ => Future.successful(new BusinessError {}.left)
     }
   }
 
-  override def handle[Response](query: Query[Response]): Future[Exception \/
-    Response] = {
+  override def handle[Response](
+    query: Query[Response]
+  ): Future[BusinessError \/ Response] =
     query match {
       case GetActiveOrders =>
-        (ordersView ? query).mapTo[Exception \/ Response]
+        (ordersView ? query).mapTo[BusinessError \/ Response]
       case getOrderDetails: GetOrderDetails =>
-        (ordersDetails ? getOrderDetails).mapTo[Exception \/
-          Response] //TODO these casts are wrong
+        (ordersDetails ? getOrderDetails).mapTo[BusinessError \/ Response]
     }
-  }
 }

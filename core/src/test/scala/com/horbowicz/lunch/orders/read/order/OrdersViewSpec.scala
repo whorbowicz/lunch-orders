@@ -9,7 +9,6 @@ import com.horbowicz.lunch.orders.query.order.GetActiveOrders
 
 import scalaz.Scalaz._
 
-
 class OrdersViewSpec extends BaseActorSpec(ActorSystem("OrdersViewSpec")) {
 
   private var ordersView: ActorRef = _

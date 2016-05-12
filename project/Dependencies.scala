@@ -26,9 +26,9 @@ object Dependencies {
 
   val default = (scalaVersion: String) => Seq(
     scalaz,
+    scalaReflect(scalaVersion),
     scalatest % Test,
-    scalamock % Test,
-    scalaReflect(scalaVersion) % Test
+    scalamock % Test
   )
 
   val akka = Seq(

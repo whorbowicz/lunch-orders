@@ -21,7 +21,7 @@ object OrdersView {
 
 class OrdersView extends Actor with ActorLogging {
 
-  private var orders = Seq.empty[Order]
+  private var orders = Vector.empty[Order]
 
   def receive: Receive = {
     case event: OrderOpened =>
